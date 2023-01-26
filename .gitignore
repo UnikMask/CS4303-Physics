@@ -1,0 +1,23 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+bin/
+.gradle
+.gradletasknamecache
+gradpe-app.setting
+!gradle-wrapper.jar
+.vscode
+.idea/
+.idea_modules/
+*.impl
+*.ipr
+*.iws
+.classpath
+
+# Ignore Gradle build output directory
+build
