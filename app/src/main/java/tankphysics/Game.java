@@ -4,14 +4,15 @@ import processing.core.PApplet;
 
 public class Game extends PApplet {
 	public void settings() {
-		size(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+		size(1920, 1080);
+		fullScreen();
 	}
 
 	public void draw() {
-
+		background(0);
 	}
 
 	public static void main(String[] args) {
-		PApplet.main(args);
+		PApplet.main(new String[] { "tankphysics.Game" });
 	}
 }
