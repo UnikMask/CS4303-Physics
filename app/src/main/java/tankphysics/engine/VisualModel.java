@@ -1,28 +1,21 @@
 package tankphysics.engine;
 
 import processing.core.PApplet;
-import processing.core.PVector;
 
 public abstract class VisualModel extends PApplet implements Component {
 	protected GameObject object;
-	protected PVector position;
 
 	public void attach(GameObject object) {
 		this.object = object;
-		this.position = object.getPosition();
 	}
 
-	/**
-	 * Draw the visual model.
-	 *
-	 * @param camera The camera to interpolate positions from.
-	 */
-	public abstract void draw(GameObject camera);
+	public abstract void draw();
 
-	/**
-	 * Draw with no camera attached.
-	 */
-	public void draw() {
-		draw(new GameObject(new PVector(displayWidth, displayHeight)));
+	public void draw(GameObject camera) {
+		pushMatrix();
+		translate(object.position.x - camera.position.x, object.position.y - camera.position.y);
+		scale(camera.size.x / ((float) displayWidth), camera.size.y / ((float) displayHeight));
+		draw();
+		popMatrix();
 	}
 }

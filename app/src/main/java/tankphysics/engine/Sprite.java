@@ -8,24 +8,20 @@ import processing.core.PVector;
  */
 public class Sprite extends VisualModel {
 	PImage sprite;
+	PVector anchor;
 
-	public void draw(GameObject camera) {
-		PVector pos_min = new PVector(position.x - object.size.x / 2, position.y - object.size.y / 2).add(position)
-				.sub(camera.position);
-		PVector pos_max = new PVector(position.x + object.size.x / 2, position.y + object.size.y / 2).add(position)
-				.sub(camera.position);
-		pos_min.x *= ((float) displayWidth) / camera.size.x;
-		pos_min.y *= ((float) displayHeight) / camera.size.x;
-		pos_max.x *= ((float) displayWidth) / camera.size.x;
-		pos_max.y *= ((float) displayHeight) / camera.size.x;
-
-		if (pos_max.x >= 0 && pos_max.y >= 0 && pos_min.x <= displayWidth && pos_min.y <= displayHeight) {
-			image(sprite, pos_min.x, pos_min.y, pos_max.x - pos_min.x, pos_max.y - pos_min.y);
-		}
+	public void draw() {
+		PVector semiSize = PVector.div(object.size, 2.0f);
+		image(sprite, object.position.x - semiSize.x, object.position.y - semiSize.y, object.position.x + semiSize.x,
+				object.position.y + semiSize.y);
 	}
 
-	public Sprite(String fp) {
+	/**
+	 * Constructor for a sprite.
+	 */
+	public Sprite(String fp, PVector anchor) {
 		sprite = loadImage(fp);
+		this.anchor = anchor;
 	}
 
 }

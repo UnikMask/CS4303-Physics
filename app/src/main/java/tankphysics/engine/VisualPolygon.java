@@ -23,12 +23,8 @@ public class VisualPolygon extends VisualModel {
 		Colour, Texture
 	}
 
-	public void draw(GameObject camera) {
-		pushMatrix();
-		translate(camera.position.x, camera.position.y);
-		scale(camera.size.x / ((float) displayWidth), camera.size.y / ((float) displayHeight));
+	public void draw() {
 		shape(polygonShape, object.getPosition().x, object.getPosition().y);
-		popMatrix();
 	}
 
 	/**
