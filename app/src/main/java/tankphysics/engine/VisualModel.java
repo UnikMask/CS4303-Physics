@@ -14,7 +14,7 @@ public abstract class VisualModel extends PApplet implements Component {
 	public void draw(GameObject camera) {
 		pushMatrix();
 		translate(object.position.x - camera.position.x, object.position.y - camera.position.y);
-		scale(camera.size.x / ((float) displayWidth), camera.size.y / ((float) displayHeight));
+		scale(((float) displayWidth) / camera.size.x, ((float) displayHeight) / camera.size.y);
 		draw();
 		popMatrix();
 	}

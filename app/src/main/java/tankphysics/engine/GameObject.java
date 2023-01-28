@@ -24,6 +24,11 @@ public class GameObject {
 		return components;
 	}
 
+	public void setup() {
+		components = new ArrayList<>();
+		children = new ArrayList<>();
+	}
+
 	/**
 	 * Move the game object by a given increment.
 	 */
@@ -32,6 +37,11 @@ public class GameObject {
 			if (followsParent)
 				child.move(increment);
 		});
+	}
+
+	public void attach(Component component) {
+		components.add(component);
+		component.attach(this);
 	}
 
 	//////////////////
@@ -57,5 +67,6 @@ public class GameObject {
 		this.position = position;
 		this.size = size;
 		this.followsParent = followsParent;
+		setup();
 	}
 }

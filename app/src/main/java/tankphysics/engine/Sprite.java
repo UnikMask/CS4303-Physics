@@ -8,7 +8,12 @@ import processing.core.PVector;
  */
 public class Sprite extends VisualModel {
 	PImage sprite;
+	String fp;
 	PVector anchor;
+
+	public void setup() {
+		sprite = loadImage(fp);
+	}
 
 	public void draw() {
 		PVector semiSize = PVector.div(object.size, 2.0f);
@@ -20,8 +25,9 @@ public class Sprite extends VisualModel {
 	 * Constructor for a sprite.
 	 */
 	public Sprite(String fp, PVector anchor) {
-		sprite = loadImage(fp);
 		this.anchor = anchor;
+		this.fp = fp;
+		setup();
 	}
 
 }

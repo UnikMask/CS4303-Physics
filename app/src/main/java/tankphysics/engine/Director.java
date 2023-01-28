@@ -11,14 +11,27 @@ public class Director extends PApplet {
 	ArrayList<GameObject> world;
 	ArrayList<VisualModel> visuals;
 
+	public void setup() {
+		world = new ArrayList<>();
+		visuals = new ArrayList<>();
+		camera = new GameObject(new PVector(displayWidth, displayHeight), new PVector(0, 0));
+	}
+
 	/**
 	 * Initiate draw on all visuals in the world.
 	 */
 	public void draw() {
-		background(0);
 		for (VisualModel v : visuals) {
 			v.draw(camera);
 		}
+	}
+
+	public GameObject getCamera() {
+		return camera;
+	}
+
+	public void setCamera(GameObject camera) {
+		this.camera = camera;
 	}
 
 	/**
@@ -40,8 +53,6 @@ public class Director extends PApplet {
 	 * Constructor for a director object.
 	 */
 	public Director() {
-		world = new ArrayList<>();
-		visuals = new ArrayList<>();
-		camera = new GameObject(new PVector(displayWidth, displayHeight));
+		setup();
 	}
 }
