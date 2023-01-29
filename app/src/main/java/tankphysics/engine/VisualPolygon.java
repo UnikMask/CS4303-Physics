@@ -2,6 +2,7 @@ package tankphysics.engine;
 
 import java.util.ArrayList;
 
+import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
@@ -23,31 +24,34 @@ public class VisualPolygon extends VisualModel {
 		Colour, Texture
 	}
 
-	public void draw() {
-		shape(polygonShape, object.getPosition().x, object.getPosition().y);
+	public void draw(PApplet sketch) {
+		if (polygonShape == null) {
+			reloadPShape(sketch);
+		}
+		sketch.shape(polygonShape, object.getPosition().x, object.getPosition().y);
 	}
 
 	/**
 	 * Reload the saved shape.
 	 */
-	public void reloadPShape() {
+	public void reloadPShape(PApplet sketch) {
 		// Setup shape creation.
-		polygonShape = createShape();
+		polygonShape = sketch.createShape();
 		polygonShape.beginShape();
-		polygonShape.translate(anchor.x, anchor.y);
 
 		// Fill polygon with given fill.
 		if (fillType == FillType.Colour) {
 			polygonShape.fill(colour);
 		} else if (fillType == FillType.Texture) {
-			polygonShape.texture(texture);
+			polygonShape.texture(sketch.loadImage("dirt_block.png"));
 		}
 
 		// Load all vertices into shape and close shape.
+		polygonShape.translate(-anchor.x, -anchor.y);
 		for (PVector v : vertices) {
-			polygonShape.vertex(v.x, v.y);
+			polygonShape.vertex(v.x * object.getSize().x, v.y * object.getSize().y);
 		}
-		polygonShape.endShape(CLOSE);
+		polygonShape.endShape(PApplet.CLOSE);
 	}
 
 	//////////////////
@@ -63,13 +67,11 @@ public class VisualPolygon extends VisualModel {
 		this(vertices, anchor);
 		fillType = FillType.Colour;
 		this.colour = colour;
-		reloadPShape();
 	}
 
 	public VisualPolygon(ArrayList<PVector> vertices, PVector anchor, PImage texture) {
 		this(vertices, anchor);
 		fillType = FillType.Texture;
 		this.texture = texture;
-		reloadPShape();
 	}
 }

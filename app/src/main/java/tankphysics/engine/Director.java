@@ -5,24 +5,19 @@ import processing.core.PVector;
 
 import java.util.ArrayList;
 
-public class Director extends PApplet {
+public class Director {
 	GameObject camera;
+	PApplet sketch;
 
 	ArrayList<GameObject> world;
 	ArrayList<VisualModel> visuals;
-
-	public void setup() {
-		world = new ArrayList<>();
-		visuals = new ArrayList<>();
-		camera = new GameObject(new PVector(displayWidth, displayHeight), new PVector(0, 0));
-	}
 
 	/**
 	 * Initiate draw on all visuals in the world.
 	 */
 	public void draw() {
 		for (VisualModel v : visuals) {
-			v.draw(camera);
+			v.draw(camera, sketch);
 		}
 	}
 
@@ -52,7 +47,10 @@ public class Director extends PApplet {
 	/**
 	 * Constructor for a director object.
 	 */
-	public Director() {
-		setup();
+	public Director(PApplet sketch) {
+		world = new ArrayList<>();
+		visuals = new ArrayList<>();
+		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight), new PVector(0, 0));
+		this.sketch = sketch;
 	}
 }

@@ -1,5 +1,6 @@
 package tankphysics.engine;
 
+import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
@@ -11,23 +12,20 @@ public class Sprite extends VisualModel {
 	String fp;
 	PVector anchor;
 
-	public void setup() {
-		sprite = loadImage(fp);
-	}
-
-	public void draw() {
+	public void draw(PApplet sketch) {
 		PVector semiSize = PVector.div(object.size, 2.0f);
-		image(sprite, object.position.x - semiSize.x, object.position.y - semiSize.y, object.position.x + semiSize.x,
-				object.position.y + semiSize.y);
+		System.out.println(semiSize.x);
+		sketch.image(sprite, object.position.x - semiSize.x, object.position.y - semiSize.y,
+				object.position.x + semiSize.x, object.position.y + semiSize.y);
 	}
 
 	/**
 	 * Constructor for a sprite.
 	 */
-	public Sprite(String fp, PVector anchor) {
+	public Sprite(String fp, PVector anchor, PApplet sketch) {
 		this.anchor = anchor;
 		this.fp = fp;
-		setup();
+		sprite = sketch.loadImage(fp);
 	}
 
 }
