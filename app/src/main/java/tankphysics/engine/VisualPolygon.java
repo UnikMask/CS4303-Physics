@@ -25,34 +25,39 @@ public class VisualPolygon extends VisualModel {
 		Colour, Texture
 	}
 
-	public void draw(PApplet sketch) {
-		if (polygonShape == null) {
-			reloadPShape(sketch);
-		}
-		sketch.shape(polygonShape, object.getPosition().x, object.getPosition().y);
+	public void draw(PApplet sketch, PVector scale) {
+		// sketch.pushMatrix();
+		// sketch.scale(scale.x, scale.y);
+		reloadPShape(sketch, scale);
+		// sketch.shape(polygonShape, object.getPosition().x - scale.x * anchor.x,
+		// object.getPosition().y - scale.y * anchor.y);
+		// sketch.popMatrix();
 	}
 
 	/**
 	 * Reload the saved shape.
 	 */
-	public void reloadPShape(PApplet sketch) {
+	public void reloadPShape(PApplet sketch, PVector scale) {
 		// Setup shape creation.
-		polygonShape = sketch.createShape();
-		polygonShape.beginShape();
+		sketch.beginShape();
 
 		// Fill polygon with given fill.
 		if (fillType == FillType.Colour) {
-			polygonShape.fill(colour);
+			sketch.fill(colour);
 		} else if (fillType == FillType.Texture) {
-			polygonShape.texture(sketch.loadImage("dirt_block.png"));
+			sketch.texture(sketch.loadImage("dirt_block.png"));
 		}
 
 		// Load all vertices into shape and close shape.
-		polygonShape.translate(-anchor.x, -anchor.y);
 		for (PVector v : vertices) {
-			polygonShape.vertex(v.x * object.getSize().x, v.y * object.getSize().y);
+			sketch.vertex(object.getPosition().x + (v.x * object.getSize().x - anchor.x) * scale.x,
+					object.getPosition().y + (v.y * object.getSize().y - anchor.y) * scale.y);
 		}
-		polygonShape.endShape(PApplet.CLOSE);
+		sketch.endShape(PApplet.CLOSE);
+	}
+
+	public void paintShape(PApplet sketch, PVector scale) {
+
 	}
 
 	//////////////////

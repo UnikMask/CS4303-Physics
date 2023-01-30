@@ -51,7 +51,7 @@ public class Director {
 		world = new ArrayList<>();
 		visuals = new ArrayList<>();
 		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight),
-								new PVector(sketch.displayWidth/2, sketch.displayHeight/2));
+				new PVector(sketch.displayWidth / 2 + 256, sketch.displayHeight / 2));
 		this.sketch = sketch;
 	}
 }
