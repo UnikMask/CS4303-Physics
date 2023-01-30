@@ -17,6 +17,7 @@ public class VisualPolygon extends VisualModel {
 	// colour/texture for polygon
 	Integer colour;
 	PImage texture;
+	ArrayList<PVector> uv;
 
 	/**
 	 * Enum determining whether a texture or a colour will fill a polygon.
@@ -26,12 +27,10 @@ public class VisualPolygon extends VisualModel {
 	}
 
 	public void draw(PApplet sketch) {
-		// sketch.pushMatrix();
-		// sketch.scale(scale.x, scale.y);
-		reloadPShape(sketch);
-		// sketch.shape(polygonShape, object.getPosition().x - scale.x * anchor.x,
-		// object.getPosition().y - scale.y * anchor.y);
-		// sketch.popMatrix();
+		if (polygonShape == null) {
+			reloadPShape(sketch);
+		}
+		sketch.shape(polygonShape, object.getPosition().x - anchor.x, object.getPosition().y - anchor.y);
 	}
 
 	/**
@@ -39,21 +38,27 @@ public class VisualPolygon extends VisualModel {
 	 */
 	public void reloadPShape(PApplet sketch) {
 		// Setup shape creation.
-		sketch.beginShape();
+		polygonShape = sketch.createShape();
+		polygonShape.beginShape();
+		polygonShape.noStroke();
 
 		// Fill polygon with given fill.
 		if (fillType == FillType.Colour) {
-			sketch.fill(colour);
+			polygonShape.fill(colour);
+			for (PVector v : vertices) {
+				polygonShape.vertex(v.x * object.getSize().x, v.y * object.getSize().y);
+			}
 		} else if (fillType == FillType.Texture) {
-			sketch.texture(sketch.loadImage("dirt_block.png"));
+			polygonShape.textureMode(PApplet.IMAGE);
+			polygonShape.texture(texture);
+			for (int i = 0; i < uv.size(); i++) {
+				polygonShape.vertex(vertices.get(i).x * object.getSize().x, vertices.get(i).y * object.getSize().y,
+						uv.get(i).x, uv.get(i).y);
+			}
 		}
 
 		// Load all vertices into shape and close shape.
-		for (PVector v : vertices) {
-			sketch.vertex(object.getPosition().x + v.x * object.getSize().x - anchor.x,
-					object.getPosition().y + v.y * object.getSize().y - anchor.y);
-		}
-		sketch.endShape(PApplet.CLOSE);
+		polygonShape.endShape();
 	}
 
 	public void paintShape(PApplet sketch, PVector scale) {
@@ -75,9 +80,10 @@ public class VisualPolygon extends VisualModel {
 		this.colour = colour;
 	}
 
-	public VisualPolygon(ArrayList<PVector> vertices, PVector anchor, PImage texture) {
+	public VisualPolygon(ArrayList<PVector> vertices, PVector anchor, PImage texture, ArrayList<PVector> uv) {
 		this(vertices, anchor);
 		fillType = FillType.Texture;
 		this.texture = texture;
+		this.uv = uv;
 	}
 }

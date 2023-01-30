@@ -22,12 +22,13 @@ public class Game extends PApplet {
 
 		ArrayList<PVector> vertices = new ArrayList<>(
 				Arrays.asList(new PVector(0, 1), new PVector(1, 1), new PVector(1, 0), new PVector(0, 0)));
+		ArrayList<PVector> blockUv = new ArrayList<>(
+				Arrays.asList(new PVector(0, 128), new PVector(128, 128), new PVector(128, 0), new PVector(0, 0)));
 
 		// Make dirt block for show.
 		GameObject dirtBlock = new GameObject(new PVector(512, 512),
 				new PVector(displayWidth - 960, displayHeight - 540));
-		VisualModel blockViz = new VisualPolygon(vertices, new PVector(256, 256), color(255));
-		// Sprite blockViz = new Sprite("dirt_block.png", new PVector(256, 256));
+		VisualModel blockViz = new VisualPolygon(vertices, new PVector(256, 256), loadImage("dirt_block.png"), blockUv);
 
 		// Make gravity-bound object.
 		GameObject bullet = new GameObject(new PVector(64, 64), new PVector(128, displayHeight - 128));
@@ -46,7 +47,7 @@ public class Game extends PApplet {
 	}
 
 	public void settings() {
-		size(1920, 1080);
+		size(1920, 1080, PApplet.P2D);
 		fullScreen();
 	}
 
