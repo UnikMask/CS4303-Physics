@@ -50,7 +50,8 @@ public class Director {
 	public Director(PApplet sketch) {
 		world = new ArrayList<>();
 		visuals = new ArrayList<>();
-		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight), new PVector(0, 0));
+		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight),
+								new PVector(sketch.displayWidth/2, sketch.displayHeight/2));
 		this.sketch = sketch;
 	}
 }

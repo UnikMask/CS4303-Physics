@@ -12,12 +12,14 @@ public abstract class VisualModel implements Component {
 	public abstract void draw(PApplet sketch);
 
 	public void draw(GameObject camera, PApplet sketch) {
-		// sketch.pushMatrix();
-		// sketch.translate(object.position.x - camera.position.x, object.position.y -
-		// camera.position.y);
-		// sketch.scale(((float) sketch.displayWidth) / camera.size.x, ((float)
-		// sketch.displayHeight) / camera.size.y);
+		sketch.pushMatrix();
+		//sketch.translate((camera.size.x / 2) - camera.position.x, (camera.size.y/2) - camera.position.y);
+		System.out.println((camera.size.x / 2) - camera.position.x);
+		System.out.println(-sketch.displayWidth/2);
+		sketch.translate(-sketch.displayWidth/2, -sketch.displayHeight/2);
+		//sketch.translate(0, 0);
+		sketch.scale(((float) sketch.displayWidth) / camera.size.x, ((float) sketch.displayHeight) / camera.size.y);
 		draw(sketch);
-		// sketch.popMatrix();
+		sketch.popMatrix();
 	}
 }
