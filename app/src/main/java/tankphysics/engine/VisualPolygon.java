@@ -25,10 +25,10 @@ public class VisualPolygon extends VisualModel {
 		Colour, Texture
 	}
 
-	public void draw(PApplet sketch, PVector scale) {
+	public void draw(PApplet sketch) {
 		// sketch.pushMatrix();
 		// sketch.scale(scale.x, scale.y);
-		reloadPShape(sketch, scale);
+		reloadPShape(sketch);
 		// sketch.shape(polygonShape, object.getPosition().x - scale.x * anchor.x,
 		// object.getPosition().y - scale.y * anchor.y);
 		// sketch.popMatrix();
@@ -37,7 +37,7 @@ public class VisualPolygon extends VisualModel {
 	/**
 	 * Reload the saved shape.
 	 */
-	public void reloadPShape(PApplet sketch, PVector scale) {
+	public void reloadPShape(PApplet sketch) {
 		// Setup shape creation.
 		sketch.beginShape();
 
@@ -50,8 +50,8 @@ public class VisualPolygon extends VisualModel {
 
 		// Load all vertices into shape and close shape.
 		for (PVector v : vertices) {
-			sketch.vertex(object.getPosition().x + (v.x * object.getSize().x - anchor.x) * scale.x,
-					object.getPosition().y + (v.y * object.getSize().y - anchor.y) * scale.y);
+			sketch.vertex(object.getPosition().x + v.x * object.getSize().x - anchor.x,
+					object.getPosition().y + v.y * object.getSize().y - anchor.y);
 		}
 		sketch.endShape(PApplet.CLOSE);
 	}

@@ -52,6 +52,11 @@ public class Game extends PApplet {
 
 	public void draw() {
 		background(0);
+
+		if (camera.getSize().x < displayWidth) {
+			camera.getSize().add(new PVector(displayWidth / 180, displayHeight / 180));
+		}
+
 		engineDirector.draw();
 	}
 

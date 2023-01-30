@@ -12,13 +12,12 @@ public class Sprite extends VisualModel {
 	String fp;
 	PVector anchor;
 
-	public void draw(PApplet sketch, PVector scale) {
+	public void draw(PApplet sketch) {
 		if (sprite == null) {
 			sprite = sketch.loadImage(fp);
 		}
-		PVector semiSize = PVector.div(object.size, 2);
-		sketch.image(sprite, object.position.x - scale.x * anchor.x, object.position.y - scale.y * anchor.y,
-				object.getSize().x * scale.x, object.getSize().y * scale.y);
+		sketch.image(sprite, object.position.x - anchor.x, object.position.y - anchor.y, object.getSize().x,
+				object.getSize().y);
 	}
 
 	/**
