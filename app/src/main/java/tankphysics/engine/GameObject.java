@@ -24,6 +24,10 @@ public class GameObject {
 		return components;
 	}
 
+	public void setPosition(PVector position) {
+		this.position = position;
+	}
+
 	public void setup() {
 		components = new ArrayList<>();
 		children = new ArrayList<>();
