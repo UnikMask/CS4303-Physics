@@ -3,7 +3,6 @@ package tankphysics.engine;
 import processing.core.PApplet;
 import processing.core.PVector;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,18 +10,58 @@ import java.util.HashSet;
 
 public class Director {
 	// World
-	PApplet sketch;
-	ArrayList<GameObject> world;
+	private PApplet sketch;
+	private HashSet<GameObject> world;
 
 	// Visuals
-	GameObject camera;
-	ArrayList<VisualModel> visuals;
+	private GameObject camera;
+	private HashSet<VisualModel> visuals;
 
 	// Forces
 	private long lastTimeStamp = new Date().getTime();
 	private final Force GRAVITY = new Force(new PVector(0, 9.18f), false, true);
 	private final float PIXELS_PER_UNIT = 64.0f;
-	HashMap<RigidBody, HashSet<Force>> bodies;
+	private HashMap<RigidBody, HashSet<Force>> bodies;
+
+	/////////////////////////
+	// Getters and Setters //
+	/////////////////////////
+
+	public GameObject getCamera() {
+		return camera;
+	}
+
+	public HashSet<VisualModel> getVisuals() {
+		return visuals;
+	}
+
+	public void setVisuals(HashSet<VisualModel> visuals) {
+		this.visuals = visuals;
+	}
+
+	public HashMap<RigidBody, HashSet<Force>> getBodies() {
+		return bodies;
+	}
+
+	public void setBodies(HashMap<RigidBody, HashSet<Force>> bodies) {
+		this.bodies = bodies;
+	}
+
+	public HashSet<GameObject> getWorld() {
+		return world;
+	}
+
+	public void setWorld(HashSet<GameObject> world) {
+		this.world = world;
+	}
+
+	public void setCamera(GameObject camera) {
+		this.camera = camera;
+	}
+
+	//////////////////////
+	// Gameloop methods //
+	//////////////////////
 
 	/**
 	 * Initiate draw on all visuals in the world.
@@ -44,12 +83,11 @@ public class Director {
 		}
 	}
 
-	public GameObject getCamera() {
-		return camera;
-	}
+	/**
+	 * Update the engine logic.
+	 */
+	public void update() {
 
-	public void setCamera(GameObject camera) {
-		this.camera = camera;
 	}
 
 	/**
@@ -70,12 +108,16 @@ public class Director {
 		}
 	}
 
+	//////////////////
+	// Constructors //
+	//////////////////
+
 	/**
 	 * Constructor for a director object.
 	 */
 	public Director(PApplet sketch) {
-		world = new ArrayList<>();
-		visuals = new ArrayList<>();
+		world = new HashSet<>();
+		visuals = new HashSet<>();
 		camera = new GameObject(new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2),
 				new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2));
 		bodies = new HashMap<>();
