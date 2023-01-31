@@ -1,6 +1,7 @@
 package tankphysics.engine;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import processing.core.PVector;
@@ -20,9 +21,50 @@ public class RigidBody implements Component {
 	// Inertia related variables.
 	private float roughness;
 
+	/////////////////////////
+	// Getters and Setters //
+	/////////////////////////
+
+	public float getMass() {
+		return mass;
+	}
+
+	public void setMass(float mass) {
+		this.mass = mass;
+		this.inverseMass = 1 / mass;
+	}
+
+	public PVector getVelocity() {
+		return velocity;
+	}
+
+	public void setVelocity(PVector velocity) {
+		this.velocity = velocity;
+	}
+
+	public float getRotationalVelocity() {
+		return rotationalVelocity;
+	}
+
+	public void setRotationalVelocity(float rotationalVelocity) {
+		this.rotationalVelocity = rotationalVelocity;
+	}
+
+	public Iterable<CollisionMesh> getHitbox() {
+		return hitbox;
+	}
+
+	/////////////////////////
+	// Component Interface //
+	/////////////////////////
+
 	public void attach(GameObject object) {
 		this.object = object;
 	}
+
+	/////////////////////////////////
+	// RigidBody Component Methods //
+	/////////////////////////////////
 
 	/**
 	 * Attach some CollisionMesh components to the RigidBody component as part of
@@ -51,31 +93,6 @@ public class RigidBody implements Component {
 				hitbox.remove(m);
 			}
 		}
-	}
-
-	public float getMass() {
-		return mass;
-	}
-
-	public void setMass(float mass) {
-		this.mass = mass;
-		this.inverseMass = 1 / mass;
-	}
-
-	public PVector getVelocity() {
-		return velocity;
-	}
-
-	public void setVelocity(PVector velocity) {
-		this.velocity = velocity;
-	}
-
-	public float getRotationalVelocity() {
-		return rotationalVelocity;
-	}
-
-	public void setRotationalVelocity(float rotationalVelocity) {
-		this.rotationalVelocity = rotationalVelocity;
 	}
 
 	/**
