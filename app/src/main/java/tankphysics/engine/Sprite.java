@@ -16,7 +16,7 @@ public class Sprite extends VisualModel {
 		if (sprite == null) {
 			sprite = sketch.loadImage(fp);
 		}
-		sketch.image(sprite, object.position.x - anchor.x, object.position.y - anchor.y, object.getSize().x,
+		sketch.image(sprite, object.getPosition().x - anchor.x, object.getPosition().y - anchor.y, object.getSize().x,
 				object.getSize().y);
 	}
 

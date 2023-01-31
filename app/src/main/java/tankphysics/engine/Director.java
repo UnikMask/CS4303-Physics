@@ -12,6 +12,7 @@ public class Director {
 	// World
 	private PApplet sketch;
 	private HashSet<GameObject> world;
+	private float secondsPerFrame;
 
 	// Visuals
 	private GameObject camera;
@@ -29,6 +30,14 @@ public class Director {
 
 	public GameObject getCamera() {
 		return camera;
+	}
+
+	public void setCamera(GameObject camera) {
+		if (world.contains(camera)) {
+			this.camera = camera;
+		} else {
+			System.err.println("Can't set a game object not belonging to world as camera.");
+		}
 	}
 
 	public HashSet<VisualModel> getVisuals() {
@@ -51,43 +60,31 @@ public class Director {
 		return world;
 	}
 
-	public void setWorld(HashSet<GameObject> world) {
-		this.world = world;
-	}
-
-	public void setCamera(GameObject camera) {
-		this.camera = camera;
-	}
-
 	//////////////////////
 	// Gameloop methods //
 	//////////////////////
 
 	/**
-	 * Initiate draw on all visuals in the world.
+	 * Disattaches a game object from the world. Game object must be in the world to
+	 * begin with. Removes all of the object's components, and its children, from
+	 * the world.
+	 *
+	 * @param obj The GameObject to distach.
 	 */
-	public void draw() {
-		long currentTime = new Date().getTime();
-		float deltaT = ((float) (currentTime - lastTimeStamp)) / 1000;
-		lastTimeStamp = currentTime;
-
-		// Apply forces to rigid bodies
-		for (RigidBody b : bodies.keySet()) {
-			b.apply(bodies.get(b).stream(), deltaT, PIXELS_PER_UNIT);
-			System.out.println(deltaT + ", " + b.getVelocity().y);
+	public void disattach(GameObject obj) {
+		if (world.contains(obj)) {
+			world.remove(obj);
+			for (Component c : obj.getComponents()) {
+				if (c instanceof VisualModel && visuals.contains(c)) {
+					visuals.remove(c);
+				} else if (c instanceof RigidBody && bodies.containsKey(c)) {
+					bodies.remove(c);
+				}
+			}
+			for (GameObject o : obj.getChildren()) {
+				disattach(o);
+			}
 		}
-
-		// Draw visuals
-		for (VisualModel v : visuals) {
-			v.draw(camera, sketch);
-		}
-	}
-
-	/**
-	 * Update the engine logic.
-	 */
-	public void update() {
-
 	}
 
 	/**
@@ -108,6 +105,49 @@ public class Director {
 		}
 	}
 
+	/**
+	 * Calculate updates and draw for the next game frame.
+	 */
+	public void nextFrame() {
+		// Get time taken since last frame and current seconds per frame.
+		secondsPerFrame = sketch.frameRate / 1000f;
+		long currentTime = new Date().getTime();
+		float deltaT = ((float) (currentTime - lastTimeStamp)) / 1000f;
+		lastTimeStamp = currentTime;
+
+		// Update loop
+		while (deltaT > secondsPerFrame) {
+			for (GameObject o : world) {
+				o.update();
+			}
+			update();
+			deltaT -= secondsPerFrame;
+		}
+		// Draw the image after all updates have been made.
+		draw();
+
+	}
+
+	/**
+	 * Initiate draw on all visuals in the world.
+	 */
+	public void draw() {
+		// Draw visuals
+		for (VisualModel v : visuals) {
+			v.draw(camera, sketch);
+		}
+	}
+
+	/**
+	 * Update the engine logic.
+	 */
+	public void update() {
+		// Apply forces to rigid bodies
+		for (RigidBody b : bodies.keySet()) {
+			b.apply(bodies.get(b).stream(), secondsPerFrame, PIXELS_PER_UNIT);
+		}
+	}
+
 	//////////////////
 	// Constructors //
 	//////////////////
@@ -118,9 +158,10 @@ public class Director {
 	public Director(PApplet sketch) {
 		world = new HashSet<>();
 		visuals = new HashSet<>();
+		bodies = new HashMap<>();
 		camera = new GameObject(new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2),
 				new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2));
-		bodies = new HashMap<>();
+		attach(camera);
 		this.sketch = sketch;
 	}
 }

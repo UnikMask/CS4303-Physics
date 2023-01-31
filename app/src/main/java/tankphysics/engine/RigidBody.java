@@ -1,6 +1,5 @@
 package tankphysics.engine;
 
-import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import processing.core.PVector;
