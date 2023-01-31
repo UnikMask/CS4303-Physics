@@ -22,8 +22,8 @@ public class Game extends PApplet {
 
 		ArrayList<PVector> vertices = new ArrayList<>(
 				Arrays.asList(new PVector(0, 1), new PVector(1, 1), new PVector(1, 0), new PVector(0, 0)));
-		ArrayList<PVector> blockUv = new ArrayList<>(
-				Arrays.asList(new PVector(0, 128), new PVector(128, 128), new PVector(128, 0), new PVector(0, 0)));
+		ArrayList<PVector> blockUv = new ArrayList<>(Arrays.asList(new PVector(0, 128 * 8),
+				new PVector(128 * 8, 128 * 8), new PVector(128 * 8, 0), new PVector(0, 0)));
 
 		// Make dirt block for show.
 		GameObject dirtBlock = new GameObject(new PVector(512, 512),

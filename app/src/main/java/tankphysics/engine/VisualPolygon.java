@@ -30,6 +30,7 @@ public class VisualPolygon extends VisualModel {
 		if (polygonShape == null) {
 			reloadPShape(sketch);
 		}
+		sketch.textureWrap(PApplet.REPEAT);
 		sketch.shape(polygonShape, object.getPosition().x - anchor.x, object.getPosition().y - anchor.y);
 	}
 
@@ -59,10 +60,6 @@ public class VisualPolygon extends VisualModel {
 
 		// Load all vertices into shape and close shape.
 		polygonShape.endShape();
-	}
-
-	public void paintShape(PApplet sketch, PVector scale) {
-
 	}
 
 	//////////////////
