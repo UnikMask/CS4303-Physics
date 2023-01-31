@@ -1,11 +1,13 @@
 package tankphysics.engine;
 
+import java.util.HashSet;
 import java.util.stream.Stream;
 
 import processing.core.PVector;
 
 public class RigidBody implements Component {
 	private GameObject object;
+	private HashSet<CollisionMesh> hitbox;
 
 	// Mass and linear force variables.
 	private PVector velocity;
@@ -20,6 +22,35 @@ public class RigidBody implements Component {
 
 	public void attach(GameObject object) {
 		this.object = object;
+	}
+
+	/**
+	 * Attach some CollisionMesh components to the RigidBody component as part of
+	 * its hitbox. The CollisionMesh component must belong to the same GameObject.
+	 *
+	 * @param meshes The meshes to attach to the RigidBody component.
+	 */
+	public void attachToHitbox(CollisionMesh... meshes) {
+		for (CollisionMesh m : meshes) {
+			if (this.object != null && m.object == this.object && !hitbox.contains(m)) {
+				hitbox.add(m);
+			}
+		}
+	}
+
+	/**
+	 * Disattach a given collision mesh from the rigid body's hitbox. The mesh must
+	 * already be in the hitbox.
+	 *
+	 * @param meshes The CollisionMesh components belonging to the object to remove
+	 *               from the RigidBody component's hitbox.
+	 */
+	public void disattachFromHitbox(CollisionMesh... meshes) {
+		for (CollisionMesh m : meshes) {
+			if (hitbox.contains(m)) {
+				hitbox.remove(m);
+			}
+		}
 	}
 
 	public float getMass() {
@@ -65,10 +96,18 @@ public class RigidBody implements Component {
 		object.setPosition(PVector.add(object.getPosition(), PVector.mult(velocity, pixelsPerUnit * deltaT)));
 	}
 
+	/**
+	 * Constructor for a RigidBody component.
+	 *
+	 * @param mass      The object's overall mass.
+	 * @param roughness The object's roughness - i.e. How sticky the object is on
+	 *                  surfaces without inertia applied.
+	 */
 	public RigidBody(float mass, float roughness) {
 		this.mass = mass;
 		this.inverseMass = 1 / mass;
 		this.rotationalVelocity = 0.0f;
 		this.roughness = roughness;
+		this.hitbox = new HashSet<>();
 	}
 }
