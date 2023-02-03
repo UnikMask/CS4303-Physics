@@ -1,7 +1,6 @@
 package tankphysics.engine;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.stream.Stream;
 
 import processing.core.PVector;
@@ -9,6 +8,7 @@ import processing.core.PVector;
 public class RigidBody implements Component {
 	private GameObject object;
 	private HashSet<CollisionMesh> hitbox;
+	private PVector anchor = new PVector();
 
 	// Mass and linear force variables.
 	private PVector velocity;
@@ -54,6 +54,22 @@ public class RigidBody implements Component {
 		return hitbox;
 	}
 
+	public GameObject getObject() {
+		return object;
+	}
+
+	public PVector getAnchor() {
+		return anchor;
+	}
+
+	public float getInverseMass() {
+		return inverseMass;
+	}
+
+	public float getRoughness() {
+		return roughness;
+	}
+
 	/////////////////////////
 	// Component Interface //
 	/////////////////////////
@@ -65,6 +81,64 @@ public class RigidBody implements Component {
 	/////////////////////////////////
 	// RigidBody Component Methods //
 	/////////////////////////////////
+
+	/**
+	 * Apply rigid body to rigid body collision check and bounce to the 2 given
+	 * RigidBody components.
+	 *
+	 * @param bodyA The 1st rigid body to check for collisions.
+	 * @param bodyB The 2nd rigid body to check for collisions.
+	 */
+	public static void applyCollisionAndBounce(RigidBody bodyA, RigidBody bodyB) {
+		for (CollisionMesh mA : bodyA.getHitbox()) {
+			for (CollisionMesh mB : bodyB.getHitbox()) {
+				// Calculate Minkowski difference to check for collision.
+				MinkowskiDifference dist = CollisionMesh.queryFaceDist(mA, mB);
+				MinkowskiDifference distB = CollisionMesh.queryFaceDist(mB, mA);
+				if (distB.minkowskiDistance < dist.minkowskiDistance) {
+					dist = distB;
+				}
+
+				// On collision
+				if (dist.minkowskiDistance < 0.0f) {
+					PVector plane = PVector.sub(dist.v2, dist.v1);
+					PVector normal = new PVector(dist.reverseNormal ? plane.x : -plane.x,
+							dist.reverseNormal ? -plane.y : plane.y);
+
+					// Get affected points on A and B
+					PVector ptA = dist.affectPoint;
+					PVector ptB = PVector.add(dist.affectPoint, PVector.mult(normal, dist.minkowskiDistance));
+					if (dist.parent != mA) {
+						PVector t = ptA;
+						ptA = ptB;
+						ptB = t;
+					}
+
+					// Get radius from center of mass.
+					// PVector radiusA = PVector.sub(ptA, bodyA.anchor);
+					// PVector radiusB = PVector.sub(ptB, bodyB.getAnchor());
+
+					// Move 1st rigid body out of collision.
+					RigidBody body = (dist.parent == mA ? bodyB : bodyA);
+					body.getObject().move(PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
+							PVector.dot(body.getVelocity(), normal)));
+
+					// Calculate impulse resolution
+					float waste = bodyA.roughness * bodyB.roughness;
+					PVector vDiff = PVector.sub(bodyB.getVelocity(), bodyA.getVelocity());
+
+					PVector impulse = PVector.mult(normal,
+							(-(1 + waste) * PVector.dot(vDiff, normal)) / (bodyA.inverseMass + bodyB.inverseMass));
+					bodyA.applyImpulse(dist.parent == mB ? impulse : PVector.sub(new PVector(), impulse), ptA);
+					bodyB.applyImpulse(dist.parent == mA ? impulse : PVector.sub(new PVector(), impulse), ptB);
+				}
+			}
+		}
+	}
+
+	public void applyImpulse(PVector impulse, PVector contactPt) {
+		velocity = PVector.add(velocity, PVector.mult(impulse, inverseMass));
+	}
 
 	/**
 	 * Attach some CollisionMesh components to the RigidBody component as part of
