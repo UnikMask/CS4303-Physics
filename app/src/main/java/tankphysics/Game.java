@@ -27,20 +27,26 @@ public class Game extends PApplet {
 				new VisualPolygon(vertices, new PVector(256, 256), loadImage("dirt_block.png"), blockUv));
 
 		// Make gravity-bound object.
+		ArrayList<PVector> bulletVertices = new ArrayList<>(
+				Arrays.asList(new PVector(-32, 32), new PVector(32, 32), new PVector(32, -32), new PVector(-32, -32)));
 		RigidBody bulletCPU = new RigidBody(18.7f, 0.2f);
-		GameObject bullet = new GameObject(new PVector(64, 64), new PVector(128, displayHeight - 128), false,
-				new Sprite("dirt_block.png", new PVector(32, 32)), bulletCPU);
+		CollisionMesh bulletMesh = new CollisionMesh(new PVector(64, 64), new PVector(), bulletVertices, 0.3f);
+		GameObject bullet = new GameObject(new PVector(64, 64), new PVector(1898, displayHeight / 2), false,
+				new Sprite("dirt_block.png", new PVector(32, 32)), bulletCPU, bulletMesh);
+		bulletCPU.attachToHitbox(bulletMesh);
 
 		// Make a plane for collision checks.
-		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 64), false,
+		ArrayList<PVector> planeVertices = new ArrayList<>(Arrays.asList(new PVector(-900, 16), new PVector(900, 16),
+				new PVector(900, -16), new PVector(-900, -16)));
+		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 16), false,
 				new VisualPolygon(vertices, new PVector(900, 16), color(255)),
-				new CollisionMesh(new PVector(1800, 32), new PVector(900, 16), vertices, 1f));
+				new CollisionMesh(new PVector(1800, 32), new PVector(), planeVertices, 0.3f));
 
 		// Attach all components to director.
 		engineDirector.attach(dirtBlock, plane, bullet);
 
 		// Give initial velocity to bullet.
-		bulletCPU.setVelocity(new PVector(10, -10));
+		// bulletCPU.setVelocity(new PVector(10, -10));
 	}
 
 	public void settings() {
@@ -50,10 +56,6 @@ public class Game extends PApplet {
 
 	public void draw() {
 		background(0);
-
-		if (camera.getSize().x < displayWidth) {
-			camera.getSize().add(new PVector(displayWidth / 180, displayHeight / 180));
-		}
 
 		engineDirector.nextFrame();
 	}
