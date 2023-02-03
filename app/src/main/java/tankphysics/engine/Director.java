@@ -93,14 +93,16 @@ public class Director {
 	 *
 	 * @param object The object to attach.
 	 */
-	public void attach(GameObject object) {
-		world.add(object);
-		for (Component c : object.getComponents()) {
-			if (c instanceof VisualModel) {
-				visuals.add((VisualModel) c);
-			}
-			if (c instanceof RigidBody) {
-				bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+	public void attach(GameObject... objects) {
+		for (GameObject object : objects) {
+			world.add(object);
+			for (Component c : object.getComponents()) {
+				if (c instanceof VisualModel) {
+					visuals.add((VisualModel) c);
+				}
+				if (c instanceof RigidBody) {
+					bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+				}
 			}
 		}
 	}
@@ -110,19 +112,24 @@ public class Director {
 	 */
 	public void nextFrame() {
 		// Get time taken since last frame and current seconds per frame.
-		secondsPerFrame = sketch.frameRate / 1000f;
+		secondsPerFrame = 1f / sketch.frameRate;
 		long currentTime = new Date().getTime();
 		float deltaT = ((float) (currentTime - lastTimeStamp)) / 1000f;
 		lastTimeStamp = currentTime;
+		System.out.println(secondsPerFrame + ", " + deltaT);
 
 		// Update loop
-		while (deltaT > secondsPerFrame) {
+		while (deltaT > 1.1 * secondsPerFrame) {
 			for (GameObject o : world) {
 				o.update();
 			}
 			update();
 			deltaT -= secondsPerFrame;
 		}
+		for (GameObject o : world) {
+			o.update();
+		}
+		update();
 		// Draw the image after all updates have been made.
 		draw();
 
