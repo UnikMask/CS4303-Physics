@@ -65,6 +65,7 @@ public class GameObject {
 			if (followsParent)
 				child.move(increment);
 		});
+		position = PVector.add(position, increment);
 	}
 
 	//////////////////

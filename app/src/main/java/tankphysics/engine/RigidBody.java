@@ -11,7 +11,7 @@ public class RigidBody implements Component {
 	private PVector anchor = new PVector();
 
 	// Mass and linear force variables.
-	private PVector velocity;
+	private PVector velocity = new PVector();
 	private float mass;
 	private float inverseMass;
 

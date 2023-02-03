@@ -34,6 +34,10 @@ public class CollisionMesh implements Component {
 		return meshType == MeshType.POLYGON ? size : new PVector(radius * 2, radius * 2);
 	}
 
+	public GameObject getObject() {
+		return this.object;
+	}
+
 	////////////////////////////
 	// Collision Mesh methods //
 	////////////////////////////
@@ -49,10 +53,11 @@ public class CollisionMesh implements Component {
 			MinkowskiDifference dist = queryFaceDist(this, m);
 
 			// If there is collision - move object and return kinetic force
-			if (dist.minkowskiDistance < 0.0f) {
+			if (dist.minkowskiDistance < -0.0f) {
+				System.out.println("Mesh to Rigid Body collision success!");
 				PVector plane = PVector.sub(dist.v2, dist.v1);
 				PVector normal = new PVector(dist.reverseNormal ? plane.x : -plane.x,
-						dist.reverseNormal ? -plane.y : plane.y);
+						dist.reverseNormal ? -plane.y : plane.y).normalize();
 
 				// Get points of contact on affected polygons.
 				PVector ptA = dist.affectPoint;
@@ -62,20 +67,18 @@ public class CollisionMesh implements Component {
 					ptA = ptB;
 					ptB = t;
 				}
-
-				// Get radius from center of mass.
-				// PVector radiusA = PVector.sub(ptA, this.anchor);
-				// PVector radiusB = PVector.sub(ptB, body.getAnchor());
-
 				// Move rigid body out of the mesh it overlaps
-				body.getObject().move(PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
-						(dist.parent == m ? -1 : 1) * PVector.dot(body.getVelocity(), normal)));
+				PVector mvt = PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
+						(dist.parent == this ? -1 : 1) * PVector.dot(body.getVelocity(), normal));
+				System.out.println("Velocity: " + body.getVelocity() + ", Upforce [" + mvt.x + "," + mvt.y + "]");
+				body.getObject().move(mvt);
 
 				// Calculate impulse resolution
 				float waste = body.getRoughness();
 				PVector impulse = PVector.mult(normal,
-						(-(1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
+						((1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
 				body.applyImpulse(dist.parent == m ? impulse : PVector.sub(new PVector(), impulse), ptA);
+				body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
 			}
 		}
 	}
@@ -109,8 +112,9 @@ public class CollisionMesh implements Component {
 			// Polygon is a circle - get closest circle, and return distance from closest of
 			// B vertices, to tangent on direction.
 			float minDist = Float.MAX_VALUE;
-			PVector pt = polygonB.vertices.get(0);
+			PVector pt = PVector.add(polygonB.vertices.get(0), polygonB.getObject().getPosition());
 			for (PVector v : polygonB.vertices) {
+				v = PVector.add(polygonB.getObject().getPosition(), v);
 				float dist = PVector.dist(polygonA.anchor, v);
 				if (dist < minDist) {
 					minDist = PVector.dist(polygonA.anchor, v);
@@ -126,16 +130,19 @@ public class CollisionMesh implements Component {
 					polygonA.vertices.get(1));
 			float reverseFactor = 1.0f;
 			for (int i = 0; i < polygonA.vertices.size(); i++) {
-				PVector v1 = polygonA.vertices.get(i);
-				PVector v2 = polygonA.vertices.get((i + 1) % polygonA.vertices.size());
+				PVector v1 = PVector.add(polygonA.getObject().getPosition(), polygonA.vertices.get(i));
+				PVector v2 = PVector.add(polygonA.getObject().getPosition(),
+						polygonA.vertices.get((i + 1) % polygonA.vertices.size()));
 
 				// Get normal of plane, get support from inverse of normal's direction, and
 				// compare distances.
 				PVector normal = new PVector(PVector.sub(v2, v1).x, -PVector.sub(v2, v1).y).mult(reverseFactor)
 						.normalize();
-				PVector support = PVector.sub(polygonB.getSupportPoint(new PVector(-normal.x, -normal.y)), v1);
-				if (PVector.dot(support, normal) > ret.minkowskiDistance) {
-					ret.minkowskiDistance = PVector.dot(support, normal);
+				PVector support = PVector.add(polygonB.getObject().getPosition(),
+						polygonB.getSupportPoint(new PVector(-normal.x, -normal.y)));
+				float dist = PVector.dot(PVector.sub(support, v1), normal);
+				if (dist > ret.minkowskiDistance) {
+					ret.minkowskiDistance = dist;
 					ret.affectPoint = support;
 					ret.v1 = v1;
 					ret.v2 = v2;
@@ -146,16 +153,12 @@ public class CollisionMesh implements Component {
 					ret.minkowskiDistance = -ret.minkowskiDistance;
 					reverseFactor = -1.0f;
 					ret.reverseNormal = true;
+				} else if (ret.minkowskiDistance > 0.0f) {
+					return ret;
 				}
 			}
 			return ret;
 		}
-	}
-
-	public static float getPlaneDistance(PVector v1, PVector v2, CollisionMesh mesh) {
-		PVector normal = new PVector(PVector.sub(v2, v1).x, -PVector.sub(v2, v1).y);
-		PVector support = PVector.sub(mesh.getSupportPoint(new PVector(-normal.x, -normal.y)), v1);
-		return PVector.dot(support, normal);
 	}
 
 	/**

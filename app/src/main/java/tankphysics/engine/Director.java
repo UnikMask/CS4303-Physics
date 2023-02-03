@@ -23,6 +23,7 @@ public class Director {
 	private final Force GRAVITY = new Force(new PVector(0, 9.18f), false, true);
 	private final float PIXELS_PER_UNIT = 64.0f;
 	private HashMap<RigidBody, HashSet<Force>> bodies;
+	private HashSet<CollisionMesh> collisions;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -79,6 +80,8 @@ public class Director {
 					visuals.remove(c);
 				} else if (c instanceof RigidBody && bodies.containsKey(c)) {
 					bodies.remove(c);
+				} else if (c instanceof CollisionMesh && collisions.contains(c)) {
+					collisions.remove(c);
 				}
 			}
 			for (GameObject o : obj.getChildren()) {
@@ -99,9 +102,10 @@ public class Director {
 			for (Component c : object.getComponents()) {
 				if (c instanceof VisualModel) {
 					visuals.add((VisualModel) c);
-				}
-				if (c instanceof RigidBody) {
+				} else if (c instanceof RigidBody) {
 					bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+				} else if (c instanceof CollisionMesh) {
+					collisions.add((CollisionMesh) c);
 				}
 			}
 		}
@@ -112,20 +116,19 @@ public class Director {
 	 */
 	public void nextFrame() {
 		// Get time taken since last frame and current seconds per frame.
-		secondsPerFrame = 1f / sketch.frameRate;
+		secondsPerFrame = (1f / sketch.frameRate);
 		long currentTime = new Date().getTime();
 		float deltaT = ((float) (currentTime - lastTimeStamp)) / 1000f;
 		lastTimeStamp = currentTime;
-		System.out.println(secondsPerFrame + ", " + deltaT);
 
 		// Update loop
-		while (deltaT > 1.1 * secondsPerFrame) {
-			for (GameObject o : world) {
-				o.update();
-			}
-			update();
-			deltaT -= secondsPerFrame;
-		}
+		// while (deltaT > 1.1 * secondsPerFrame) {
+		// for (GameObject o : world) {
+		// o.update();
+		// }
+		// update();
+		// deltaT -= secondsPerFrame;
+		// }
 		for (GameObject o : world) {
 			o.update();
 		}
@@ -153,6 +156,22 @@ public class Director {
 		for (RigidBody b : bodies.keySet()) {
 			b.apply(bodies.get(b).stream(), secondsPerFrame, PIXELS_PER_UNIT);
 		}
+		// Apply collision check for inert mesh to rigid body
+		for (RigidBody b : bodies.keySet()) {
+			for (CollisionMesh c : collisions) {
+				if (b.getObject() != c.getObject()) {
+					c.applyCollisionAndBounce(b);
+				}
+			}
+		}
+		// Apply rigid body to rigid body collision check
+		for (RigidBody b : bodies.keySet()) {
+			for (RigidBody bA : bodies.keySet()) {
+				if (b != bA) {
+					RigidBody.applyCollisionAndBounce(b, bA);
+				}
+			}
+		}
 	}
 
 	//////////////////
@@ -166,7 +185,8 @@ public class Director {
 		world = new HashSet<>();
 		visuals = new HashSet<>();
 		bodies = new HashMap<>();
-		camera = new GameObject(new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2),
+		collisions = new HashSet<>();
+		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight),
 				new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2));
 		attach(camera);
 		this.sketch = sketch;
