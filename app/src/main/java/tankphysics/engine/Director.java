@@ -164,14 +164,12 @@ public class Director {
 				}
 			}
 		}
-		// Apply rigid body to rigid body collision check
-		for (RigidBody b : bodies.keySet()) {
-			for (RigidBody bA : bodies.keySet()) {
-				if (b != bA) {
-					RigidBody.applyCollisionAndBounce(b, bA);
-				}
-			}
-		}
+		/*
+		 * Apply rigid body to rigid body collision check for (RigidBody b :
+		 * bodies.keySet()) { for (RigidBody bA : bodies.keySet()) { if (b != bA) {
+		 * RigidBody.applyCollisionAndBounce(b, bA); } } }
+		 */
+
 	}
 
 	//////////////////

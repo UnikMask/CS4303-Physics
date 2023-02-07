@@ -28,6 +28,7 @@ public class CollisionMesh implements Component {
 
 	public void attach(GameObject obj) {
 		object = obj;
+		this.size = obj.getSize();
 	}
 
 	public PVector getSize() {
@@ -42,6 +43,11 @@ public class CollisionMesh implements Component {
 	// Collision Mesh methods //
 	////////////////////////////
 
+	public boolean requiresBounceDetails(CollisionMesh mesh) {
+		return PVector.dist(this.getObject().getPosition(),
+				mesh.getObject().getPosition()) < (this.size.mag() + mesh.size.mag());
+	}
+
 	/**
 	 * Apply inert object to rigid body collision check and bounce to the given
 	 * RigidBody component.
@@ -51,13 +57,17 @@ public class CollisionMesh implements Component {
 	public void applyCollisionAndBounce(RigidBody body) {
 		for (CollisionMesh m : body.getHitbox()) {
 			MinkowskiDifference dist = queryFaceDist(this, m);
+			MinkowskiDifference distB = queryFaceDist(m, this);
+			if (distB.minkowskiDistance < dist.minkowskiDistance) {
+				dist = distB;
+			}
 
 			// If there is collision - move object and return kinetic force
 			if (dist.minkowskiDistance < -0.0f) {
 				System.out.println("Mesh to Rigid Body collision success!");
 				PVector plane = PVector.sub(dist.v2, dist.v1);
-				PVector normal = new PVector(dist.reverseNormal ? plane.x : -plane.x,
-						dist.reverseNormal ? -plane.y : plane.y).normalize();
+				PVector normal = new PVector(dist.reverseNormal ? plane.y : -plane.y,
+						dist.reverseNormal ? -plane.x : plane.x).normalize();
 
 				// Get points of contact on affected polygons.
 				PVector ptA = dist.affectPoint;
@@ -84,18 +94,6 @@ public class CollisionMesh implements Component {
 	}
 
 	/**
-	 * Check if the component collide with a given collision mesh.
-	 *
-	 * @param mesh The mesh to check for collision.
-	 */
-	public boolean collides(CollisionMesh mesh) {
-		MinkowskiDifference rA = queryFaceDist(this, mesh);
-		MinkowskiDifference rB = queryFaceDist(mesh, this);
-
-		return Math.max(rA.minkowskiDistance, rB.minkowskiDistance) < 0;
-	}
-
-	/**
 	 * Check if a polygon is colliding with the point of another polygon. Used the
 	 * Minkowski Difference-based Separating Axis Theorem algorithm. Based on Dirk
 	 * Gregorius's slides during GDC 2013. cf.
@@ -109,56 +107,79 @@ public class CollisionMesh implements Component {
 	 */
 	public static MinkowskiDifference queryFaceDist(CollisionMesh polygonA, CollisionMesh polygonB) {
 		if (polygonA.meshType == MeshType.CIRCLE) {
-			// Polygon is a circle - get closest circle, and return distance from closest of
-			// B vertices, to tangent on direction.
-			float minDist = Float.MAX_VALUE;
-			PVector pt = PVector.add(polygonB.vertices.get(0), polygonB.getObject().getPosition());
-			for (PVector v : polygonB.vertices) {
-				v = PVector.add(polygonB.getObject().getPosition(), v);
-				float dist = PVector.dist(polygonA.anchor, v);
-				if (dist < minDist) {
-					minDist = PVector.dist(polygonA.anchor, v);
-					pt = v;
-				}
-			}
-			PVector normal = PVector.sub(pt, polygonA.anchor);
-			return new MinkowskiDifference(minDist, polygonA, PVector.add(normal, new PVector(normal.y, -normal.x)),
-					PVector.add(normal, new PVector(-normal.y, normal.x)));
-		} else {
-			// Get distance to polygon - Apply SAT.
-			MinkowskiDifference ret = new MinkowskiDifference(Float.MIN_VALUE, polygonA, polygonA.vertices.get(0),
-					polygonA.vertices.get(1));
-			float reverseFactor = 1.0f;
-			for (int i = 0; i < polygonA.vertices.size(); i++) {
-				PVector v1 = PVector.add(polygonA.getObject().getPosition(), polygonA.vertices.get(i));
-				PVector v2 = PVector.add(polygonA.getObject().getPosition(),
-						polygonA.vertices.get((i + 1) % polygonA.vertices.size()));
+			return circleQueryFaceDist(polygonA, polygonB);
+		}
+		// Get distance to polygon - Apply SAT.
+		MinkowskiDifference ret = new MinkowskiDifference(-Float.MAX_VALUE, polygonA, polygonA.vertices.get(0),
+				polygonA.vertices.get(1));
+		float reverseFactor = 1.0f;
+		System.out.println("Starting collision checking...");
+		for (int i = 0; i < polygonA.vertices.size(); i++) {
+			PVector vertex1 = PVector.add(polygonA.getObject().getPosition(), polygonA.vertices.get(i));
+			PVector vertex2 = PVector.add(polygonA.getObject().getPosition(),
+					polygonA.vertices.get((i + 1) % polygonA.vertices.size()));
 
-				// Get normal of plane, get support from inverse of normal's direction, and
-				// compare distances.
-				PVector normal = new PVector(PVector.sub(v2, v1).x, -PVector.sub(v2, v1).y).mult(reverseFactor)
-						.normalize();
-				PVector support = PVector.add(polygonB.getObject().getPosition(),
-						polygonB.getSupportPoint(new PVector(-normal.x, -normal.y)));
-				float dist = PVector.dot(PVector.sub(support, v1), normal);
-				if (dist > ret.minkowskiDistance) {
-					ret.minkowskiDistance = dist;
-					ret.affectPoint = support;
-					ret.v1 = v1;
-					ret.v2 = v2;
-				}
-				// Assume correct side on 1st vertices' plane, reverse normals if vertex is on
-				// outside of 1st vertices' plane.
-				if (i == 0 && ret.minkowskiDistance > 0.0f) {
-					ret.minkowskiDistance = -ret.minkowskiDistance;
-					reverseFactor = -1.0f;
-					ret.reverseNormal = true;
-				} else if (ret.minkowskiDistance > 0.0f) {
+			// Get normal of plane, get support from inverse of normal's direction, and
+			// compare distances.
+			PVector planeNormal = new PVector(PVector.sub(vertex2, vertex1).y, -PVector.sub(vertex2, vertex1).x)
+					.mult(reverseFactor).normalize();
+			PVector support = PVector.add(polygonB.getObject().getPosition(),
+					polygonB.getSupportPoint(new PVector(-planeNormal.x, -planeNormal.y)));
+			float dist = PVector.dot(PVector.sub(support, vertex1), planeNormal);
+
+			// Assume 1st vertex negative - reverse normals if not.
+			if (i == 0 && !ret.reverseNormal && dist > 0.0f) {
+				reverseFactor = -1.0f;
+				ret.reverseNormal = true;
+				i -= 1;
+			} else if (dist > ret.minkowskiDistance) {
+				ret.minkowskiDistance = dist;
+				ret.affectPoint = support;
+				ret.v1 = vertex1;
+				ret.v2 = vertex2;
+
+				if (ret.minkowskiDistance > 0.0f) {
 					return ret;
 				}
 			}
-			return ret;
 		}
+		return ret;
+	}
+
+	/**
+	 * Check if a circle mesh is colliding with a point of another polygon.
+	 *
+	 * @param sphere The circle to check with. Method returns null if mesh is a
+	 *               polygon.
+	 * @param mesh   The mesh to check points from. Can be either a polygon or a
+	 *               circle.
+	 *
+	 * @return The Minkowski distance with points that make a tangent on the support
+	 *         point of the circle's circle. Null if polygonA is a polygon mesh.
+	 */
+	public static MinkowskiDifference circleQueryFaceDist(CollisionMesh sphere, CollisionMesh mesh) {
+		if (sphere.meshType != MeshType.CIRCLE) {
+			return null;
+		}
+		float minDist = Float.MAX_VALUE;
+		PVector pt = PVector.add(mesh.vertices.get(0), mesh.getObject().getPosition());
+
+		if (mesh.meshType == MeshType.POLYGON) {
+			for (PVector v : mesh.vertices) {
+				v = PVector.add(mesh.getObject().getPosition(), v);
+				float dist = PVector.dist(sphere.anchor, v);
+				if (dist < minDist) {
+					minDist = PVector.dist(sphere.anchor, v);
+					pt = v;
+				}
+			}
+		} else {
+			minDist = PVector.sub(sphere.getObject().getPosition(), mesh.getObject().getPosition()).mag()
+					- sphere.radius - mesh.radius;
+		}
+		PVector normal = PVector.sub(pt, sphere.anchor);
+		return new MinkowskiDifference(minDist, sphere, PVector.add(normal, new PVector(normal.y, -normal.x)),
+				PVector.add(normal, new PVector(-normal.y, normal.x)));
 	}
 
 	/**
@@ -171,9 +192,10 @@ public class CollisionMesh implements Component {
 			PVector max = vertices.get(0);
 			float maxDot = PVector.dot(max, direction);
 			for (PVector v : vertices) {
-				if (v.dot(direction) > maxDot) {
+				float dot = v.dot(direction);
+				if (dot > maxDot) {
 					max = v;
-					maxDot = v.dot(direction);
+					maxDot = dot;
 				}
 			}
 			return max;
@@ -189,14 +211,13 @@ public class CollisionMesh implements Component {
 	/**
 	 * Constructor for a polygon-type CollisionMesh object.
 	 *
-	 * @param size      The mesh's bounds. Recalculated with object rotation.
 	 * @param anchor    The anchor for the mesh's rotations.
 	 * @param vertices  The mesh's vertices defining the edge of the mesh/polygon.
 	 * @param roughness How rough the terrain is - i.e. How much force is required
 	 *                  for the object to move without inertia.
 	 */
-	public CollisionMesh(PVector size, PVector anchor, ArrayList<PVector> vertices, float roughness) {
-		this.size = size;
+	public CollisionMesh(PVector anchor, ArrayList<PVector> vertices, float roughness) {
+		this.anchor = anchor;
 		this.meshType = MeshType.POLYGON;
 		this.vertices = vertices;
 		this.friction = roughness;
@@ -210,10 +231,11 @@ public class CollisionMesh implements Component {
 	 * @param roughness How rough the terrain is - i.e. How much force is required
 	 *                  for the object to move without inertia.
 	 */
-	public CollisionMesh(PVector size, PVector anchor, float radius, float roughness) {
-		this.size = size;
-		this.meshType = MeshType.POLYGON;
+	public CollisionMesh(PVector anchor, float radius, float roughness) {
+		this.anchor = anchor;
+		this.meshType = MeshType.CIRCLE;
 		this.radius = radius;
+		this.size = new PVector(radius * 2, radius * 2);
 		this.friction = roughness;
 	}
 }
