@@ -8,6 +8,7 @@ public class Game extends PApplet {
 	Director engineDirector;
 	GameObject camera;
 	GameObject bullet;
+	RigidBody bulletCPU;
 
 	public void setup() {
 		frameRate(60);
@@ -17,7 +18,7 @@ public class Game extends PApplet {
 		// Set up vertices for blocks
 
 		// Make gravity-bound object.
-		RigidBody bulletCPU = new RigidBody(18.7f, 0.2f);
+		bulletCPU = new RigidBody(18.7f, 0.2f);
 		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.3f);
 		bullet = new GameObject(new PVector(64, 64), new PVector(120, displayHeight - 180), false,
 				new Sprite("dirt_block.png", new PVector(32, 32)), bulletCPU, bulletMesh);
@@ -43,6 +44,9 @@ public class Game extends PApplet {
 
 		// Give initial velocity to bullet.
 		bulletCPU.setVelocity(new PVector(2, -10));
+		camera.setPosition(bullet.getPosition());
+		camera.setSize(PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
+				1 + (bulletCPU.getVelocity().mag() / 40)));
 	}
 
 	public void settings() {
@@ -53,7 +57,12 @@ public class Game extends PApplet {
 	public void draw() {
 		background(0);
 
-		camera.setPosition(bullet.getPosition());
+		camera.setPosition(new PVector(lerp(camera.getPosition().x, bullet.getPosition().x, 0.02f),
+				lerp(camera.getPosition().y, bullet.getPosition().y, 0.02f)));
+		PVector newSize = PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
+				1 + (bulletCPU.getVelocity().mag() / 40));
+		camera.setSize(
+				new PVector(lerp(camera.getSize().x, newSize.x, 0.05f), lerp(camera.getSize().y, newSize.y, 0.05f)));
 		engineDirector.nextFrame();
 	}
 
