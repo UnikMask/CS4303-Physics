@@ -68,8 +68,14 @@ public class CollisionMesh implements Component {
 	public boolean applyCollisionAndBounce(RigidBody body) {
 		for (CollisionMesh m : body.getHitbox()) {
 			MinkowskiDifference dist = queryFaceDist(this, m);
+			if (dist.minkowskiDistance > 0.0f) {
+				return false;
+			}
 			MinkowskiDifference distB = queryFaceDist(m, this);
-			if (distB.minkowskiDistance < dist.minkowskiDistance) {
+			if (distB.minkowskiDistance > 0.0f) {
+				return false;
+			}
+			if (distB.minkowskiDistance > dist.minkowskiDistance) {
 				dist = distB;
 			}
 
@@ -96,12 +102,10 @@ public class CollisionMesh implements Component {
 				float waste = body.getRoughness();
 				PVector impulse = PVector.mult(normal,
 						(-(1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
-				System.out.println("Impulse on " + this + ": [" + impulse.x + ", " + impulse.y + "]");
+				System.out.println(this + " - Impulse: [" + impulse.x + ", " + impulse.y + "]");
 
-				if (mvt.mag() > 0.1) {
-					body.applyImpulse(impulse, ptA);
-					body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
-				}
+				body.applyImpulse(impulse, ptA);
+				body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
 				return true;
 			}
 		}
@@ -121,6 +125,7 @@ public class CollisionMesh implements Component {
 	 *         minkowski distance of polygon B to the edge.
 	 */
 	public static MinkowskiDifference queryFaceDist(CollisionMesh polygonA, CollisionMesh polygonB) {
+		System.out.println("Collision checking started...");
 		if (polygonA.meshType == MeshType.CIRCLE) {
 			return circleQueryFaceDist(polygonA, polygonB);
 		}
@@ -142,6 +147,8 @@ public class CollisionMesh implements Component {
 			float dist = PVector.dot(PVector.sub(support, vertex1), planeNormal);
 
 			// Assume 1st vertex negative - reverse normals if not.
+			System.out.println("normal: [" + planeNormal.x + "," + planeNormal.y + "], dist: " + dist + ", support: ["
+					+ support.x + "," + support.y + "]");
 			if (i == 0 && !ret.reverseNormal && dist > 0.0f) {
 				reverseFactor = -1.0f;
 				ret.reverseNormal = true;
@@ -153,10 +160,12 @@ public class CollisionMesh implements Component {
 				ret.v2 = vertex2;
 
 				if (ret.minkowskiDistance > 0.0f) {
+					System.out.println("Not colliding - stop!");
 					return ret;
 				}
 			}
 		}
+		System.out.println("Colliding!");
 		return ret;
 	}
 
