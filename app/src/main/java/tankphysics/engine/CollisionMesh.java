@@ -43,9 +43,20 @@ public class CollisionMesh implements Component {
 	// Collision Mesh methods //
 	////////////////////////////
 
-	public boolean requiresBounceDetails(CollisionMesh mesh) {
-		return PVector.dist(this.getObject().getPosition(),
-				mesh.getObject().getPosition()) < (this.size.mag() + mesh.size.mag());
+	public boolean requiresCollisionCheck(CollisionMesh mesh) {
+		return (Math.abs(this.getObject().getPosition().x - mesh.getObject().getPosition().y) < this.getSize().x
+				+ (mesh.getSize().x / 2))
+				|| (Math.abs(this.getObject().getPosition().y - mesh.getObject().getPosition().y) < this.getSize().y
+						+ (mesh.getSize().y / 2));
+	}
+
+	public boolean requiresCollisionCheck(RigidBody b) {
+		for (CollisionMesh mesh : b.getHitbox()) {
+			if (requiresCollisionCheck(mesh)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -64,7 +75,6 @@ public class CollisionMesh implements Component {
 
 			// If there is collision - move object and return kinetic force
 			if (dist.minkowskiDistance < -0.0f) {
-				System.out.println("Mesh to Rigid Body collision success!");
 				PVector plane = PVector.sub(dist.v2, dist.v1);
 				PVector normal = new PVector(dist.reverseNormal ? plane.y : -plane.y,
 						dist.reverseNormal ? -plane.x : plane.x).normalize();
@@ -80,13 +90,13 @@ public class CollisionMesh implements Component {
 				// Move rigid body out of the mesh it overlaps
 				PVector mvt = PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
 						(dist.parent == this ? -1 : 1) * PVector.dot(body.getVelocity(), normal));
-				System.out.println("Velocity: " + body.getVelocity() + ", Upforce [" + mvt.x + "," + mvt.y + "]");
 				body.getObject().move(mvt);
 
 				// Calculate impulse resolution
 				float waste = body.getRoughness();
 				PVector impulse = PVector.mult(normal,
 						((1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
+				System.out.println("Impulse on " + this + ": [" + impulse.x + ", " + impulse.y + "]");
 				body.applyImpulse(dist.parent == m ? impulse : PVector.sub(new PVector(), impulse), ptA);
 				body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
 			}
@@ -113,7 +123,6 @@ public class CollisionMesh implements Component {
 		MinkowskiDifference ret = new MinkowskiDifference(-Float.MAX_VALUE, polygonA, polygonA.vertices.get(0),
 				polygonA.vertices.get(1));
 		float reverseFactor = 1.0f;
-		System.out.println("Starting collision checking...");
 		for (int i = 0; i < polygonA.vertices.size(); i++) {
 			PVector vertex1 = PVector.add(polygonA.getObject().getPosition(), polygonA.vertices.get(i));
 			PVector vertex2 = PVector.add(polygonA.getObject().getPosition(),

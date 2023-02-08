@@ -160,7 +160,9 @@ public class Director {
 		for (RigidBody b : bodies.keySet()) {
 			for (CollisionMesh c : collisions) {
 				if (b.getObject() != c.getObject()) {
-					c.applyCollisionAndBounce(b);
+					if (c.requiresCollisionCheck(b)) {
+						c.applyCollisionAndBounce(b);
+					}
 				}
 			}
 		}
