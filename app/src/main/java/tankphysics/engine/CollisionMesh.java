@@ -65,7 +65,7 @@ public class CollisionMesh implements Component {
 	 *
 	 * @param body The RigidBody component to check against.
 	 */
-	public void applyCollisionAndBounce(RigidBody body) {
+	public boolean applyCollisionAndBounce(RigidBody body) {
 		for (CollisionMesh m : body.getHitbox()) {
 			MinkowskiDifference dist = queryFaceDist(this, m);
 			MinkowskiDifference distB = queryFaceDist(m, this);
@@ -95,12 +95,17 @@ public class CollisionMesh implements Component {
 				// Calculate impulse resolution
 				float waste = body.getRoughness();
 				PVector impulse = PVector.mult(normal,
-						((1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
+						(-(1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
 				System.out.println("Impulse on " + this + ": [" + impulse.x + ", " + impulse.y + "]");
-				body.applyImpulse(dist.parent == m ? impulse : PVector.sub(new PVector(), impulse), ptA);
-				body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
+
+				if (mvt.mag() > 0.1) {
+					body.applyImpulse(impulse, ptA);
+					body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
+				}
+				return true;
 			}
 		}
+		return false;
 	}
 
 	/**

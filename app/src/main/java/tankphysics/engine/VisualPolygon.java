@@ -46,14 +46,13 @@ public class VisualPolygon extends VisualModel {
 		if (fillType == FillType.Colour) {
 			polygonShape.fill(colour);
 			for (PVector v : vertices) {
-				polygonShape.vertex(v.x * object.getSize().x, v.y * object.getSize().y);
+				polygonShape.vertex(v.x, v.y);
 			}
 		} else if (fillType == FillType.Texture) {
 			polygonShape.textureMode(PApplet.IMAGE);
 			polygonShape.texture(texture);
 			for (int i = 0; i < uv.size(); i++) {
-				polygonShape.vertex(vertices.get(i).x * object.getSize().x, vertices.get(i).y * object.getSize().y,
-						uv.get(i).x, uv.get(i).y);
+				polygonShape.vertex(vertices.get(i).x, vertices.get(i).y, uv.get(i).x, uv.get(i).y);
 			}
 		}
 
@@ -65,19 +64,19 @@ public class VisualPolygon extends VisualModel {
 	// Constructors //
 	//////////////////
 
-	VisualPolygon(List<PVector> vertices, PVector anchor) {
+	VisualPolygon(PVector anchor, List<PVector> vertices) {
 		this.vertices = vertices;
 		this.anchor = anchor;
 	}
 
-	public VisualPolygon(List<PVector> vertices, PVector anchor, Integer colour) {
-		this(vertices, anchor);
+	public VisualPolygon(PVector anchor, List<PVector> vertices, Integer colour) {
+		this(anchor, vertices);
 		fillType = FillType.Colour;
 		this.colour = colour;
 	}
 
-	public VisualPolygon(List<PVector> vertices, PVector anchor, PImage texture, List<PVector> uv) {
-		this(vertices, anchor);
+	public VisualPolygon(PVector anchor, List<PVector> vertices, PImage texture, List<PVector> uv) {
+		this(anchor, vertices);
 		fillType = FillType.Texture;
 		this.texture = texture;
 		this.uv = uv;
