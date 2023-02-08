@@ -25,6 +25,10 @@ public class GameObject {
 		return size;
 	}
 
+	public void setSize(PVector size) {
+		this.size = size;
+	}
+
 	public ArrayList<Component> getComponents() {
 		return components;
 	}
