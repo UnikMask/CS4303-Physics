@@ -1,6 +1,6 @@
 package tankphysics.engine;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -9,14 +9,14 @@ import processing.core.PVector;
 
 public class VisualPolygon extends VisualModel {
 	PShape polygonShape;
-	ArrayList<PVector> vertices;
+	List<PVector> vertices;
 	PVector anchor;
 	FillType fillType;
 
 	// colour/texture for polygon
 	Integer colour;
 	PImage texture;
-	ArrayList<PVector> uv;
+	List<PVector> uv;
 
 	/**
 	 * Enum determining whether a texture or a colour will fill a polygon.
@@ -65,18 +65,18 @@ public class VisualPolygon extends VisualModel {
 	// Constructors //
 	//////////////////
 
-	VisualPolygon(ArrayList<PVector> vertices, PVector anchor) {
+	VisualPolygon(List<PVector> vertices, PVector anchor) {
 		this.vertices = vertices;
 		this.anchor = anchor;
 	}
 
-	public VisualPolygon(ArrayList<PVector> vertices, PVector anchor, Integer colour) {
+	public VisualPolygon(List<PVector> vertices, PVector anchor, Integer colour) {
 		this(vertices, anchor);
 		fillType = FillType.Colour;
 		this.colour = colour;
 	}
 
-	public VisualPolygon(ArrayList<PVector> vertices, PVector anchor, PImage texture, ArrayList<PVector> uv) {
+	public VisualPolygon(List<PVector> vertices, PVector anchor, PImage texture, List<PVector> uv) {
 		this(vertices, anchor);
 		fillType = FillType.Texture;
 		this.texture = texture;

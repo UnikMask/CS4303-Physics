@@ -1,6 +1,6 @@
 package tankphysics.engine;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import processing.core.PVector;
 
@@ -12,7 +12,7 @@ import processing.core.PVector;
 public class CollisionMesh implements Component {
 	protected GameObject object;
 	private MeshType meshType;
-	private ArrayList<PVector> vertices;
+	private List<PVector> vertices;
 	private float radius;
 	private float friction;
 	private PVector size;
@@ -225,7 +225,7 @@ public class CollisionMesh implements Component {
 	 * @param roughness How rough the terrain is - i.e. How much force is required
 	 *                  for the object to move without inertia.
 	 */
-	public CollisionMesh(PVector anchor, ArrayList<PVector> vertices, float roughness) {
+	public CollisionMesh(PVector anchor, List<PVector> vertices, float roughness) {
 		this.anchor = anchor;
 		this.meshType = MeshType.POLYGON;
 		this.vertices = vertices;
