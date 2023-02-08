@@ -52,8 +52,17 @@ public class Polygons {
 		return makeSquare(size, new PVector(size.x / 2, size.y / 2));
 	}
 
-	public static List<PVector> getHitboxSquare() {
-		return makeSquare(new PVector(1, 1), new PVector());
+	public static List<PVector> getPolygonUVMapping(List<PVector> polygon, PVector upLeft, PVector downRight,
+			PVector textureSize) {
+		List<PVector> uvVertices = new ArrayList<>();
+		PVector size = PVector.sub(downRight, upLeft);
+		for (PVector v : polygon) {
+			uvVertices.add(new PVector(textureSize.x * ((v.x + upLeft.x) / size.x),
+					textureSize.y * ((v.y + upLeft.y) / size.y)));
+		}
+		System.out.println(uvVertices);
+
+		return uvVertices;
 	}
 
 }
