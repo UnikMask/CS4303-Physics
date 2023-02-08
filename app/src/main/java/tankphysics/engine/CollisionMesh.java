@@ -43,11 +43,18 @@ public class CollisionMesh implements Component {
 	// Collision Mesh methods //
 	////////////////////////////
 
+	/**
+	 * Do a broad O(1) complexity collision check between 2 meshes to determine
+	 * whether a more complex collision check is required.
+	 *
+	 * @param mesh The collision mesh component to check against.
+	 *
+	 * @return Whether the broad collision check returns positive or not.
+	 */
 	public boolean requiresCollisionCheck(CollisionMesh mesh) {
-		return (Math.abs(this.getObject().getPosition().x - mesh.getObject().getPosition().y) < this.getSize().x
-				+ (mesh.getSize().x / 2))
-				|| (Math.abs(this.getObject().getPosition().y - mesh.getObject().getPosition().y) < this.getSize().y
-						+ (mesh.getSize().y / 2));
+		PVector dist = PVector.sub(this.getObject().getPosition(), mesh.getObject().getPosition());
+		PVector minDist = PVector.div(PVector.add(this.getObject().getSize(), mesh.getObject().getSize()), 2);
+		return Math.abs(dist.x) < minDist.x && Math.abs(dist.y) < minDist.y;
 	}
 
 	public boolean requiresCollisionCheck(RigidBody b) {
