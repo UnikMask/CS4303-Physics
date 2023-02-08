@@ -21,7 +21,10 @@ public class Game extends PApplet {
 		bulletCPU = new RigidBody(18.7f, 0.2f);
 		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.3f);
 		bullet = new GameObject(new PVector(64, 64), new PVector(120, displayHeight - 180), false,
-				new Sprite("dirt_block.png", new PVector(32, 32)), bulletCPU, bulletMesh);
+				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
+						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(64, 64)), new PVector(-32, -32),
+								new PVector(32, 32), new PVector(128, 128))),
+				bulletCPU, bulletMesh);
 		bulletCPU.attachToHitbox(bulletMesh);
 
 		// Make a plane for collision checks.
@@ -31,19 +34,24 @@ public class Game extends PApplet {
 
 		GameObject hexagon = new GameObject(new PVector(512, 512), new PVector(displayWidth / 2, 3 * displayHeight / 4),
 				false,
-				new VisualPolygon(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), color(255)),
+				new VisualPolygon(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6),
+						loadImage("dirt_block.png"),
+						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
+								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
 				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 1f));
 
 		// Make a plane for collision checks.
-		GameObject wall = new GameObject(new PVector(64, 128), new PVector(displayWidth - 128, displayHeight - 112),
-				false, new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 128)), color(255)),
-				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 128)), 0.3f));
+		GameObject wall = new GameObject(new PVector(32, 128), new PVector(displayWidth - 76, displayHeight - 96),
+				false, new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(32, 128)), color(255)),
+				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(32, 128)), 0.3f));
 
 		// Attach all components to director.
 		engineDirector.attach(plane, bullet, wall, hexagon);
 
 		// Give initial velocity to bullet.
-		bulletCPU.setVelocity(new PVector(2, -10));
+		bulletCPU.setVelocity(new PVector(8, -10));
+
+		// Set initial camera position and zoom
 		camera.setPosition(bullet.getPosition());
 		camera.setSize(PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
 				1 + (bulletCPU.getVelocity().mag() / 40)));
