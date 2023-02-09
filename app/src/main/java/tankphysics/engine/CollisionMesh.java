@@ -73,12 +73,12 @@ public class CollisionMesh implements Component {
 	 * @param body The RigidBody component to check against.
 	 */
 	public boolean applyCollisionAndBounce(RigidBody body) {
-		for (CollisionMesh m : body.getHitbox()) {
-			MinkowskiDifference dist = queryFaceDist(this, m);
+		for (CollisionMesh bodyMesh : body.getHitbox()) {
+			MinkowskiDifference dist = queryFaceDist(this, bodyMesh);
 			if (dist.minkowskiDistance > 0.0f) {
 				return false;
 			}
-			MinkowskiDifference distB = queryFaceDist(m, this);
+			MinkowskiDifference distB = queryFaceDist(bodyMesh, this);
 			if (distB.minkowskiDistance > 0.0f) {
 				return false;
 			}
@@ -87,36 +87,46 @@ public class CollisionMesh implements Component {
 			}
 
 			// If there is collision - move object and return kinetic force
-			if (dist.minkowskiDistance < -0.0f) {
-				PVector plane = PVector.sub(dist.v2, dist.v1);
-				PVector normal = new PVector(dist.reverseNormal ? plane.y : -plane.y,
-						dist.reverseNormal ? -plane.x : plane.x).normalize();
-
-				// Get points of contact on affected polygons.
-				PVector ptA = dist.affectPoint;
-				PVector ptB = PVector.add(dist.affectPoint, PVector.mult(normal, dist.minkowskiDistance));
-				if (dist.parent != m) {
-					PVector t = ptA;
-					ptA = ptB;
-					ptB = t;
-				}
-				// Move rigid body out of the mesh it overlaps
-				PVector mvt = PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
-						(dist.parent == this ? -1 : 1) * PVector.dot(body.getVelocity(), normal));
-				body.getObject().move(mvt);
-
-				// Calculate impulse resolution
-				float waste = body.getRoughness();
-				PVector impulse = PVector.mult(normal,
-						(-(1 + waste) * PVector.dot(body.getVelocity(), normal)) / (body.getInverseMass()));
-				System.out.println(this + " - Impulse: [" + impulse.x + ", " + impulse.y + "]");
-
-				body.applyImpulse(impulse, ptA);
-				body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
+			if (dist.minkowskiDistance < 0.0f) {
+				this.applyImpulseAndFriction(body, bodyMesh, dist);
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public void applyImpulseAndFriction(RigidBody body, CollisionMesh bodyMesh, MinkowskiDifference dist) {
+		PVector plane = PVector.sub(dist.v2, dist.v1);
+		PVector normal = new PVector(dist.reverseNormal ? plane.y : -plane.y, dist.reverseNormal ? -plane.x : plane.x)
+				.normalize();
+
+		if ((dist.parent == bodyMesh? -1: 1) * PVector.dot(normal, body.getVelocity()) < 0.0f) {
+			return;
+		}
+
+		// Get points of contact on affected polygons.
+		PVector ptOther = dist.affectPoint;
+		PVector ptParent = PVector.add(dist.affectPoint, PVector.mult(normal, dist.minkowskiDistance));
+		if (dist.parent == this) {
+			PVector t = ptOther;
+			ptOther = ptParent;
+			ptParent = t;
+		}
+
+		// Move rigid body out of the mesh it overlaps
+		PVector mvt = PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
+				(dist.parent == bodyMesh ? 1 : -1) * PVector.dot(body.getVelocity(), normal));
+		body.getObject().move(mvt);
+
+		// Calculate impulse resolution
+		float waste = body.getRoughness();
+		PVector impulse = PVector.mult(normal,
+				(-(1 + waste) * PVector.dot(body.getVelocity(), normal)) * (body.getMass()));
+		System.out.println("[" +impulse.x +"," + impulse.y +"]");
+
+		body.applyImpulse(impulse, ptOther);
+		body.getObject().move(PVector.mult(normal, 0.2f * dist.minkowskiDistance));
+
 	}
 
 	/**

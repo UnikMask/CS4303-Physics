@@ -24,6 +24,7 @@ public class Director {
 	private final float PIXELS_PER_UNIT = 64.0f;
 	private HashMap<RigidBody, HashSet<Force>> bodies;
 	private HashSet<CollisionMesh> collisions;
+	public boolean pause = false;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -59,6 +60,10 @@ public class Director {
 
 	public HashSet<GameObject> getWorld() {
 		return world;
+	}
+
+	public void togglePause() {
+		pause = !pause;
 	}
 
 	//////////////////////
@@ -129,10 +134,12 @@ public class Director {
 		// update();
 		// deltaT -= secondsPerFrame;
 		// }
-		for (GameObject o : world) {
-			o.update();
+		if (!pause) {
+			for (GameObject o : world) {
+				o.update();
+			}
+			update();
 		}
-		update();
 		// Draw the image after all updates have been made.
 		draw();
 

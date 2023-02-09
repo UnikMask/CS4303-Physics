@@ -20,7 +20,7 @@ public class Game extends PApplet {
 		// Make gravity-bound object.
 		bulletCPU = new RigidBody(18.7f, 0.2f);
 		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.3f);
-		bullet = new GameObject(new PVector(64, 64), new PVector(120, displayHeight - 180), false,
+		bullet = new GameObject(new PVector(64, 64), new PVector(960, 0), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(64, 64)), new PVector(-32, -32),
 								new PVector(32, 32), new PVector(128, 128))),
@@ -49,17 +49,26 @@ public class Game extends PApplet {
 		engineDirector.attach(plane, bullet, wall, hexagon);
 
 		// Give initial velocity to bullet.
-		bulletCPU.setVelocity(new PVector(8, -10));
+		// bulletCPU.setVelocity(new PVector(8, -10));
 
 		// Set initial camera position and zoom
 		camera.setPosition(bullet.getPosition());
 		camera.setSize(PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
-				1 + (bulletCPU.getVelocity().mag() / 40)));
+				1 + (bulletCPU.getVelocity().mag() / 25)));
 	}
 
 	public void settings() {
 		size(1920, 1080, PApplet.P2D);
 		fullScreen();
+	}
+
+	public void keyReleased() {
+		if (key == CODED) {
+			if (keyCode == UP) {
+				engineDirector.togglePause();
+			}
+		}
+
 	}
 
 	public void draw() {
@@ -68,9 +77,9 @@ public class Game extends PApplet {
 		camera.setPosition(new PVector(lerp(camera.getPosition().x, bullet.getPosition().x, 0.02f),
 				lerp(camera.getPosition().y, bullet.getPosition().y, 0.02f)));
 		PVector newSize = PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
-				1 + (bulletCPU.getVelocity().mag() / 40));
+				1 + (bulletCPU.getVelocity().mag() / 25));
 		camera.setSize(
-				new PVector(lerp(camera.getSize().x, newSize.x, 0.05f), lerp(camera.getSize().y, newSize.y, 0.05f)));
+				new PVector(lerp(camera.getSize().x, newSize.x, 0.1f), lerp(camera.getSize().y, newSize.y, 0.1f)));
 		engineDirector.nextFrame();
 	}
 
