@@ -1,5 +1,7 @@
 package tankphysics.engine;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +27,33 @@ public class Director {
 	private HashMap<RigidBody, HashSet<Force>> bodies;
 	private HashSet<CollisionMesh> collisions;
 	public boolean pause = false;
+
+	// Force handling
+	private HashMap<PhysicalObject, HashSet<Pair>> objectMap = new HashMap<>();
+	private HashSet<Pair> activePairs = new HashSet<>();
+
+	class Pair {
+		PhysicalObject obj1;
+		PhysicalObject obj2;
+
+		@Override
+		public int hashCode() {
+			return obj1.hashCode() + obj2.hashCode();
+		}
+
+		public boolean equals(Object obj) {
+			if (obj instanceof Pair) {
+				Pair p = (Pair) obj;
+				return (this.obj1 == p.obj1 && this.obj2 == p.obj2) || (this.obj1 == p.obj2 && this.obj2 == p.obj1);
+			}
+			return false;
+		}
+
+		public Pair(PhysicalObject obj1, PhysicalObject obj2) {
+			this.obj1 = obj1;
+			this.obj2 = obj2;
+		}
+	}
 
 	/////////////////////////
 	// Getters and Setters //
@@ -107,10 +136,29 @@ public class Director {
 			for (Component c : object.getComponents()) {
 				if (c instanceof VisualModel) {
 					visuals.add((VisualModel) c);
-				} else if (c instanceof RigidBody) {
-					bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
-				} else if (c instanceof CollisionMesh) {
-					collisions.add((CollisionMesh) c);
+				} else if (c instanceof RigidBody || c instanceof CollisionMesh) {
+					PhysicalObject cPhys = (PhysicalObject) c;
+					objectMap.put(cPhys, new HashSet<>());
+
+					// Add all new rigid body interactions to list of pairs
+					for (RigidBody b : bodies.keySet()) {
+						Pair newPair = new Pair(cPhys, b);
+						activePairs.add(newPair);
+						objectMap.get(cPhys).add(newPair);
+						objectMap.get(b).add(newPair);
+					}
+					if (c instanceof CollisionMesh) {
+						collisions.add((CollisionMesh) c);
+					} else {
+						// Add all collision mesh interactions to list of pairs.
+						for (CollisionMesh mesh : collisions) {
+							Pair newPair = new Pair(cPhys, mesh);
+							activePairs.add(newPair);
+							objectMap.get(cPhys).add(newPair);
+							objectMap.get(mesh).add(newPair);
+						}
+						bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+					}
 				}
 			}
 		}
@@ -163,30 +211,18 @@ public class Director {
 		for (RigidBody b : bodies.keySet()) {
 			b.apply(bodies.get(b).stream(), secondsPerFrame, PIXELS_PER_UNIT);
 		}
+
 		// Apply collision check for inert mesh to rigid body
-		for (RigidBody b : bodies.keySet()) {
-			for (CollisionMesh c : collisions) {
-				if (b.getObject() != c.getObject()) {
-					if (PhysicalObject.requiresCollisionCheck(b, c)) {
-						PhysicalObject.applyCollisionAndBounce(b, c);
-					}
-				}
-			}
-		}
-		HashMap<RigidBody, HashSet<RigidBody>> doneBodies = new HashMap<>();
-		for (RigidBody b : bodies.keySet()) {
-			for (RigidBody bb : bodies.keySet()) {
-				if (!doneBodies.containsKey(bb) && !doneBodies.containsKey(b)) {
-					doneBodies.put(b, new HashSet<>(Arrays.asList(bb)));
-				} else if (!doneBodies.containsKey(bb)) {
-					doneBodies.get(b).add(bb);
-				} else if (!doneBodies.get(bb).contains(b)) {
-					doneBodies.get(bb).add(b);
-				} else {
-					continue;
-				}
-				if (b != bb && PhysicalObject.requiresCollisionCheck(b, bb)) {
-					PhysicalObject.applyCollisionAndBounce(b, bb);
+		ArrayDeque<Pair> queue = new ArrayDeque<>(activePairs);
+		while (!queue.isEmpty()) {
+			Pair next = queue.pop();
+			if (PhysicalObject.requiresCollisionCheck(next.obj1, next.obj2)) {
+				boolean moved = PhysicalObject.applyCollisionAndBounce(next.obj1, next.obj2);
+				if (moved) {
+					HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
+					nextElements.addAll(objectMap.get(next.obj1));
+					nextElements.remove(next);
+					queue.addAll(nextElements);
 				}
 			}
 		}

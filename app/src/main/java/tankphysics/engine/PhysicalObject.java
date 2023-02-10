@@ -59,7 +59,7 @@ public interface PhysicalObject {
 	 * @param details The collision details containing the objects to resolve
 	 *                impulse from.
 	 */
-	public static void applyImpulseResolution(CollisionDetails details) {
+	public static boolean applyImpulseResolution(CollisionDetails details) {
 		PhysicalObject objA = details.objA;
 		PhysicalObject objB = details.objB;
 
@@ -67,7 +67,7 @@ public interface PhysicalObject {
 		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
 		float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
 		if (velocityProjectionOnNormal > 0) {
-			return;
+			return false;
 		}
 
 		// Calculate impulse resolution
@@ -90,15 +90,17 @@ public interface PhysicalObject {
 					details.penetration * CORRECTION_PERCENTAGE * objB.getInverseMass() * inverseTotalMass)));
 		}
 		System.out.println(details);
+		return -details.penetration > CORRECTION_THRESHOLD;
 	}
 
-	public static void applyCollisionAndBounce(PhysicalObject objA, PhysicalObject objB) {
+	public static boolean applyCollisionAndBounce(PhysicalObject objA, PhysicalObject objB) {
 		// If there is collision - move object and return kinetic force
 		CollisionDetails details = PhysicalObject.getCollisionDetails(objA, objB);
 
 		if (details != null) {
-			PhysicalObject.applyImpulseResolution(details);
+			return PhysicalObject.applyImpulseResolution(details);
 		}
+		return false;
 	}
 
 	/**
