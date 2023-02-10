@@ -49,7 +49,7 @@ public class Game extends PApplet {
 						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
 								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
 				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6),
-						Map.ofEntries(Map.entry("staticFriction", 0.1f), Map.entry("dynamicFriction", 0.1f),
+						Map.ofEntries(Map.entry("staticFriction", 1f), Map.entry("dynamicFriction", 0.8f),
 								Map.entry("bounciness", 0.3f))));
 
 		// Make a plane for collision checks.
