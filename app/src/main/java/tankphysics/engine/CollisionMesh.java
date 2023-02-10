@@ -22,9 +22,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private PVector anchor;
 
 	// Material Properties
-	private float staticFriction = 0.2f;
-	private float dynamicFriction = 0.2f;
-	private float bounciness = 0.5f;
+	private float staticFriction = 1f;
+	private float dynamicFriction = 1f;
+	private float bounciness = 1f;
 
 	private static enum MeshType {
 		CIRCLE, POLYGON

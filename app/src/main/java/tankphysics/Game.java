@@ -13,7 +13,7 @@ public class Game extends PApplet {
 	RigidBody bulletCPU;
 
 	public void setup() {
-		frameRate(60);
+		frameRate(144);
 		engineDirector = new Director(this);
 		camera = engineDirector.getCamera();
 
@@ -40,7 +40,8 @@ public class Game extends PApplet {
 		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 16), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), color(255)),
 				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)),
-						Map.ofEntries(Map.entry("staticFriction", 0.5f), Map.entry("dynamicFriction", 0.5f))));
+						Map.ofEntries(Map.entry("staticFriction", 1f), Map.entry("dynamicFriction", 1.5f),
+								Map.entry("bounciness", 0.3f))));
 
 		GameObject hexagon = new GameObject(new PVector(512, 512), new PVector(displayWidth / 2, 3 * displayHeight / 4),
 				false,
@@ -49,8 +50,8 @@ public class Game extends PApplet {
 						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
 								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
 				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6),
-						Map.ofEntries(Map.entry("staticFriction", 1f), Map.entry("dynamicFriction", 0.8f),
-								Map.entry("bounciness", 0.3f))));
+						Map.ofEntries(Map.entry("staticFriction", 0.1f), Map.entry("dynamicFriction", 0.1f),
+								Map.entry("bounciness", 0.2f))));
 
 		// Make a plane for collision checks.
 		GameObject wall = new GameObject(new PVector(32, 128), new PVector(displayWidth - 76, displayHeight - 96),
