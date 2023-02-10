@@ -14,7 +14,7 @@ public class Director {
 	// World
 	private PApplet sketch;
 	private HashSet<GameObject> world;
-	private float secondsPerFrame;
+	private float targetSecondsPerFrame = 1f / 144;
 
 	// Visuals
 	private GameObject camera;
@@ -22,6 +22,7 @@ public class Director {
 
 	// Forces
 	private long lastTimeStamp = new Date().getTime();
+	private float deltaT = 0;
 	private final Force GRAVITY = new Force(new PVector(0, 9.18f), false, true);
 	private final float PIXELS_PER_UNIT = 64.0f;
 	private HashMap<RigidBody, HashSet<Force>> bodies;
@@ -169,24 +170,17 @@ public class Director {
 	 */
 	public void nextFrame() {
 		// Get time taken since last frame and current seconds per frame.
-		secondsPerFrame = (1f / sketch.frameRate);
 		long currentTime = new Date().getTime();
-		float deltaT = ((float) (currentTime - lastTimeStamp)) / 1000f;
+		deltaT += ((float) (currentTime - lastTimeStamp)) / 1000f;
 		lastTimeStamp = currentTime;
 
 		// Update loop
-		// while (deltaT > 1.1 * secondsPerFrame) {
-		// for (GameObject o : world) {
-		// o.update();
-		// }
-		// update();
-		// deltaT -= secondsPerFrame;
-		// }
-		if (!pause) {
+		while (deltaT > targetSecondsPerFrame) {
 			for (GameObject o : world) {
 				o.update();
 			}
 			update();
+			deltaT -= targetSecondsPerFrame;
 		}
 		// Draw the image after all updates have been made.
 		draw();
@@ -209,7 +203,7 @@ public class Director {
 	public void update() {
 		// Apply forces to rigid bodies
 		for (RigidBody b : bodies.keySet()) {
-			b.apply(bodies.get(b).stream(), secondsPerFrame, PIXELS_PER_UNIT);
+			b.apply(bodies.get(b).stream(), targetSecondsPerFrame, PIXELS_PER_UNIT);
 		}
 
 		// Apply collision check for inert mesh to rigid body
