@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 import processing.core.PVector;
 
-public class RigidBody implements Component {
+public class RigidBody implements Component, PhysicalObject {
 	private GameObject object;
 	private HashSet<CollisionMesh> hitbox;
 	private PVector anchor = new PVector();
@@ -17,9 +17,6 @@ public class RigidBody implements Component {
 
 	// Torque related variables.
 	private float rotationalVelocity;
-
-	// Inertia related variables.
-	private float roughness;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -35,7 +32,7 @@ public class RigidBody implements Component {
 	}
 
 	public PVector getVelocity() {
-		return velocity;
+		return velocity.copy();
 	}
 
 	public void setVelocity(PVector velocity) {
@@ -66,75 +63,36 @@ public class RigidBody implements Component {
 		return inverseMass;
 	}
 
-	public float getRoughness() {
-		return roughness;
-	}
-
-	/////////////////////////
-	// Component Interface //
-	/////////////////////////
+	////////////////////////
+	// Interface Methods //
+	////////////////////////
 
 	public void attach(GameObject object) {
 		this.object = object;
+		for (CollisionMesh m : hitbox) {
+			m.object = object;
+		}
+	}
+
+	public Iterable<CollisionMesh> getMeshes() {
+		return getHitbox();
+	}
+
+	public void setPosition(PVector position) {
+		object.setPosition(position);
+	}
+
+	public PVector getPosition() {
+		return object.getPosition().copy();
+	}
+
+	public PVector getSize() {
+		return object.getSize();
 	}
 
 	/////////////////////////////////
 	// RigidBody Component Methods //
 	/////////////////////////////////
-
-	/**
-	 * Apply rigid body to rigid body collision check and bounce to the 2 given
-	 * RigidBody components.
-	 *
-	 * @param bodyA The 1st rigid body to check for collisions.
-	 * @param bodyB The 2nd rigid body to check for collisions.
-	 */
-	public static void applyCollisionAndBounce(RigidBody bodyA, RigidBody bodyB) {
-		for (CollisionMesh mA : bodyA.getHitbox()) {
-			for (CollisionMesh mB : bodyB.getHitbox()) {
-				// Calculate Minkowski difference to check for collision.
-				MinkowskiDifference dist = CollisionMesh.queryFaceDist(mA, mB);
-				MinkowskiDifference distB = CollisionMesh.queryFaceDist(mB, mA);
-				if (distB.minkowskiDistance < dist.minkowskiDistance) {
-					dist = distB;
-				}
-
-				// On collision
-				if (dist.minkowskiDistance < 0.0f) {
-					PVector plane = PVector.sub(dist.v2, dist.v1);
-					PVector normal = new PVector(dist.reverseNormal ? plane.x : -plane.x,
-							dist.reverseNormal ? -plane.y : plane.y);
-
-					// Get affected points on A and B
-					PVector ptA = dist.affectPoint;
-					PVector ptB = PVector.add(dist.affectPoint, PVector.mult(normal, dist.minkowskiDistance));
-					if (dist.parent != mA) {
-						PVector t = ptA;
-						ptA = ptB;
-						ptB = t;
-					}
-
-					// Get radius from center of mass.
-					// PVector radiusA = PVector.sub(ptA, bodyA.anchor);
-					// PVector radiusB = PVector.sub(ptB, bodyB.getAnchor());
-
-					// Move 1st rigid body out of collision.
-					RigidBody body = (dist.parent == mA ? bodyB : bodyA);
-					body.getObject().move(PVector.mult(PVector.div(body.getVelocity(), body.getVelocity().mag()),
-							PVector.dot(body.getVelocity(), normal)));
-
-					// Calculate impulse resolution
-					float waste = bodyA.roughness * bodyB.roughness;
-					PVector vDiff = PVector.sub(bodyB.getVelocity(), bodyA.getVelocity());
-
-					PVector impulse = PVector.mult(normal,
-							(-(1 + waste) * PVector.dot(vDiff, normal)) / (bodyA.inverseMass + bodyB.inverseMass));
-					bodyA.applyImpulse(dist.parent == mB ? impulse : PVector.sub(new PVector(), impulse), ptA);
-					bodyB.applyImpulse(dist.parent == mA ? impulse : PVector.sub(new PVector(), impulse), ptB);
-				}
-			}
-		}
-	}
 
 	public void applyImpulse(PVector impulse, PVector contactPt) {
 		velocity = PVector.add(velocity, PVector.mult(impulse, inverseMass));
@@ -148,8 +106,9 @@ public class RigidBody implements Component {
 	 */
 	public void attachToHitbox(CollisionMesh... meshes) {
 		for (CollisionMesh m : meshes) {
-			if (this.object != null && m.object == this.object && !hitbox.contains(m)) {
+			if (m.object == null) {
 				hitbox.add(m);
+				m.object = this.object;
 			}
 		}
 	}
@@ -194,11 +153,10 @@ public class RigidBody implements Component {
 	 * @param roughness The object's roughness - i.e. How sticky the object is on
 	 *                  surfaces without inertia applied.
 	 */
-	public RigidBody(float mass, float roughness) {
+	public RigidBody(float mass) {
 		this.mass = mass;
 		this.inverseMass = 1 / mass;
 		this.rotationalVelocity = 0.0f;
-		this.roughness = roughness;
 		this.hitbox = new HashSet<>();
 	}
 }

@@ -18,19 +18,27 @@ public class Game extends PApplet {
 		// Set up vertices for blocks
 
 		// Make gravity-bound object.
-		bulletCPU = new RigidBody(18.7f, 0.2f);
-		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.3f);
-		bullet = new GameObject(new PVector(64, 64), new PVector(960, 0), false,
+		bulletCPU = new RigidBody(310.2f);
+		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.2f,
+				0.2f);
+		bullet = new GameObject(new PVector(64, 64), new PVector(100, displayHeight - 256), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(64, 64)), new PVector(-32, -32),
 								new PVector(32, 32), new PVector(128, 128))),
-				bulletCPU, bulletMesh);
+				bulletCPU);
 		bulletCPU.attachToHitbox(bulletMesh);
+
+		RigidBody duplicateCPU = new RigidBody(31.1f);
+		CollisionMesh dupMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.1f, 0.2f);
+		GameObject duplicateBullet = new GameObject(new PVector(64, 64),
+				new PVector(displayWidth - 100, displayHeight - 128), false,
+				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), color(128)), duplicateCPU);
+		duplicateCPU.attachToHitbox(dupMesh);
 
 		// Make a plane for collision checks.
 		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 16), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), color(255)),
-				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), 0.3f, 0.3f));
 
 		GameObject hexagon = new GameObject(new PVector(512, 512), new PVector(displayWidth / 2, 3 * displayHeight / 4),
 				false,
@@ -38,21 +46,22 @@ public class Game extends PApplet {
 						loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
 								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
-				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 1f));
+				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 1f, 0.3f));
 
 		// Make a plane for collision checks.
 		GameObject wall = new GameObject(new PVector(32, 128), new PVector(displayWidth - 76, displayHeight - 96),
 				false, new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(32, 128)), color(255)),
-				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(32, 128)), 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(32, 128)), 0.3f, 0.3f));
 
 		// Attach all components to director.
-		engineDirector.attach(plane, bullet, wall, hexagon);
+		engineDirector.attach(plane, bullet, wall, hexagon, duplicateBullet);
 
 		// Give initial velocity to bullet.
-		// bulletCPU.setVelocity(new PVector(8, -10));
+		bulletCPU.setVelocity(new PVector(8, -10));
+		duplicateCPU.setVelocity(new PVector(-8, -10));
 
 		// Set initial camera position and zoom
-		camera.setPosition(bullet.getPosition());
+		camera.setPosition(duplicateCPU.getPosition());
 		camera.setSize(PVector.mult(new PVector(displayWidth / 2, displayHeight / 2),
 				1 + (bulletCPU.getVelocity().mag() / 25)));
 	}

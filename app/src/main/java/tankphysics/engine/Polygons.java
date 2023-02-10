@@ -60,7 +60,6 @@ public class Polygons {
 			uvVertices.add(new PVector(textureSize.x * ((v.x + upLeft.x) / size.x),
 					textureSize.y * ((v.y + upLeft.y) / size.y)));
 		}
-		System.out.println(uvVertices);
 
 		return uvVertices;
 	}

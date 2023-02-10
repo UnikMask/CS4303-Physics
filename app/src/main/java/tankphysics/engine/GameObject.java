@@ -1,7 +1,7 @@
 package tankphysics.engine;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import processing.core.PVector;
 
@@ -10,8 +10,8 @@ public class GameObject {
 	private PVector size;
 	private boolean followsParent;
 
-	private ArrayList<Component> components;
-	private ArrayList<GameObject> children;
+	private HashSet<Component> components;
+	private HashSet<GameObject> children;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -29,11 +29,11 @@ public class GameObject {
 		this.size = size;
 	}
 
-	public ArrayList<Component> getComponents() {
+	public HashSet<Component> getComponents() {
 		return components;
 	}
 
-	public ArrayList<GameObject> getChildren() {
+	public HashSet<GameObject> getChildren() {
 		return children;
 	}
 
@@ -44,6 +44,10 @@ public class GameObject {
 	public void attach(Component component) {
 		components.add(component);
 		component.attach(this);
+	}
+
+	public void disattach(Component component) {
+		components.remove(component);
 	}
 
 	////////////////////////
@@ -103,10 +107,10 @@ public class GameObject {
 		this.position = position;
 		this.size = size;
 		this.followsParent = followsParent;
-		this.components = new ArrayList<>(Arrays.asList(components));
+		this.components = new HashSet<>(Arrays.asList(components));
 		for (Component c : this.components) {
 			c.attach(this);
 		}
-		children = new ArrayList<>();
+		children = new HashSet<>();
 	}
 }

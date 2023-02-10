@@ -1,12 +1,12 @@
 package tankphysics.engine;
 
-import processing.core.PApplet;
-import processing.core.PVector;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import processing.core.PApplet;
+import processing.core.PVector;
 
 public class Director {
 	// World
@@ -167,9 +167,26 @@ public class Director {
 		for (RigidBody b : bodies.keySet()) {
 			for (CollisionMesh c : collisions) {
 				if (b.getObject() != c.getObject()) {
-					if (c.requiresCollisionCheck(b)) {
-						c.applyCollisionAndBounce(b);
+					if (PhysicalObject.requiresCollisionCheck(b, c)) {
+						PhysicalObject.applyCollisionAndBounce(b, c);
 					}
+				}
+			}
+		}
+		HashMap<RigidBody, HashSet<RigidBody>> doneBodies = new HashMap<>();
+		for (RigidBody b : bodies.keySet()) {
+			for (RigidBody bb : bodies.keySet()) {
+				if (!doneBodies.containsKey(bb) && !doneBodies.containsKey(b)) {
+					doneBodies.put(b, new HashSet<>(Arrays.asList(bb)));
+				} else if (!doneBodies.containsKey(bb)) {
+					doneBodies.get(b).add(bb);
+				} else if (!doneBodies.get(bb).contains(b)) {
+					doneBodies.get(bb).add(b);
+				} else {
+					continue;
+				}
+				if (b != bb && PhysicalObject.requiresCollisionCheck(b, bb)) {
+					PhysicalObject.applyCollisionAndBounce(b, bb);
 				}
 			}
 		}
