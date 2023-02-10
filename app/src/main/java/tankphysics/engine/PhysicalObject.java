@@ -111,8 +111,8 @@ public interface PhysicalObject {
 				.normalize();
 
 		// Factor on friction - breaks object speed on contact by roughness of material.
-		float frictionFactor = -PVector.dot(relativeVelocity, tan) * details.meshA.getRoughness()
-				* details.meshB.getRoughness() / (objA.getInverseMass() + objB.getInverseMass());
+		float frictionFactor = -PVector.dot(relativeVelocity, tan) * details.meshA.getStaticFriction()
+				* details.meshB.getStaticFriction() / (objA.getInverseMass() + objB.getInverseMass());
 		objA.setVelocity(PVector.sub(objA.getVelocity(), PVector.mult(tan, frictionFactor * objA.getInverseMass())));
 		objB.setVelocity(PVector.add(objB.getVelocity(), PVector.mult(tan, frictionFactor * objB.getInverseMass())));
 	}

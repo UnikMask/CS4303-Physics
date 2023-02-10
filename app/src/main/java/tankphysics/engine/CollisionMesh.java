@@ -2,6 +2,7 @@ package tankphysics.engine;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import processing.core.PVector;
 
@@ -15,8 +16,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private MeshType meshType;
 	private List<PVector> vertices;
 	private float radius;
-	private float friction = 0.5f;
-	private float bounciness;
+	private float staticFriction = 0.2f;
+	private float dynamicFriction = 0.2f;
+	private float bounciness = 0.5f;
 	private PVector size;
 	private PVector anchor;
 
@@ -41,8 +43,12 @@ public class CollisionMesh implements Component, PhysicalObject {
 		return bounciness;
 	}
 
-	public float getRoughness() {
-		return friction;
+	public float getStaticFriction() {
+		return staticFriction;
+	}
+
+	public float getDynamicFriction() {
+		return dynamicFriction;
 	}
 
 	///////////////////////
@@ -188,6 +194,25 @@ public class CollisionMesh implements Component, PhysicalObject {
 		}
 	}
 
+	/**
+	 * Set properties of the rigid body from a key-value map.
+	 */
+	public void setProperties(Map<String, Float> properties) {
+		if (properties == null) {
+			return;
+		}
+		for (String property : properties.keySet()) {
+			float val = properties.get(property);
+			if (property.equals("dynamicFriction")) {
+				dynamicFriction = val;
+			} else if (property.equals("staticFriction")) {
+				staticFriction = val;
+			} else if (property.equals("bounciness")) {
+				bounciness = val;
+			}
+		}
+	}
+
 	/////////////////
 	// Constructor //
 	/////////////////
@@ -200,12 +225,11 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 * @param roughness How rough the terrain is - i.e. How much force is required
 	 *                  for the object to move without inertia.
 	 */
-	public CollisionMesh(PVector anchor, List<PVector> vertices, float roughness, float bounciness) {
+	public CollisionMesh(PVector anchor, List<PVector> vertices, Map<String, Float> properties) {
 		this.anchor = anchor;
 		this.meshType = MeshType.POLYGON;
 		this.vertices = vertices;
-		this.friction = roughness;
-		this.bounciness = bounciness;
+		setProperties(properties);
 	}
 
 	/**
@@ -216,12 +240,11 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 * @param friction How rough the terrain is - i.e. How much force is required
 	 *                 for the object to move without inertia.
 	 */
-	public CollisionMesh(PVector anchor, float radius, float friction, float bounciness) {
+	public CollisionMesh(PVector anchor, float radius, Map<String, Float> properties) {
 		this.anchor = anchor;
 		this.meshType = MeshType.CIRCLE;
 		this.radius = radius;
 		this.size = new PVector(radius * 2, radius * 2);
-		this.friction = friction;
-		this.bounciness = bounciness;
+		setProperties(properties);
 	}
 }

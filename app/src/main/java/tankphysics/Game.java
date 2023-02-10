@@ -1,5 +1,7 @@
 package tankphysics;
 
+import java.util.Map;
+
 import processing.core.PApplet;
 import processing.core.PVector;
 import tankphysics.engine.*;
@@ -19,8 +21,7 @@ public class Game extends PApplet {
 
 		// Make gravity-bound object.
 		bulletCPU = new RigidBody(310.2f);
-		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.1f,
-				0.2f);
+		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), null);
 		bullet = new GameObject(new PVector(64, 64), new PVector(100, displayHeight - 256), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(64, 64)), new PVector(-32, -32),
@@ -29,7 +30,7 @@ public class Game extends PApplet {
 		bulletCPU.attachToHitbox(bulletMesh);
 
 		RigidBody duplicateCPU = new RigidBody(31.1f);
-		CollisionMesh dupMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.1f, 0.2f);
+		CollisionMesh dupMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), null);
 		GameObject duplicateBullet = new GameObject(new PVector(64, 64),
 				new PVector(displayWidth - 100, displayHeight - 128), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), color(128)), duplicateCPU);
@@ -38,7 +39,8 @@ public class Game extends PApplet {
 		// Make a plane for collision checks.
 		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 16), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), color(255)),
-				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), 0.3f, 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)),
+						Map.ofEntries(Map.entry("staticFriction", 0.5f), Map.entry("dynamicFriction", 0.5f))));
 
 		GameObject hexagon = new GameObject(new PVector(512, 512), new PVector(displayWidth / 2, 3 * displayHeight / 4),
 				false,
@@ -46,12 +48,14 @@ public class Game extends PApplet {
 						loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
 								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
-				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 0.1f, 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6),
+						Map.ofEntries(Map.entry("staticFriction", 0.1f), Map.entry("dynamicFriction", 0.1f),
+								Map.entry("bounciness", 0.3f))));
 
 		// Make a plane for collision checks.
 		GameObject wall = new GameObject(new PVector(32, 128), new PVector(displayWidth - 76, displayHeight - 96),
 				false, new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(32, 128)), color(255)),
-				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(32, 128)), 0.3f, 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(32, 128)), null));
 
 		// Attach all components to director.
 		engineDirector.attach(plane, bullet, wall, hexagon, duplicateBullet);
