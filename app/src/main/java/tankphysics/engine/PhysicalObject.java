@@ -17,6 +17,14 @@ public interface PhysicalObject {
 
 	public PVector getSize();
 
+	public float getOrientation();
+
+	public void setOrientation(float radians);
+
+	public float getRotationalVelocity();
+
+	public void setRotationalVelocity(float velocity);
+
 	public void setPosition(PVector position);
 
 	public void setVelocity(PVector velocity);

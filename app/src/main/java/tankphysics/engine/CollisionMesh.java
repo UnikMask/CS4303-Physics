@@ -15,12 +15,16 @@ public class CollisionMesh implements Component, PhysicalObject {
 	protected GameObject object;
 	private MeshType meshType;
 	private List<PVector> vertices;
+	private List<PVector> storageVertices;
 	private float radius;
+
+	private PVector size;
+	private PVector anchor;
+
+	// Material Properties
 	private float staticFriction = 0.2f;
 	private float dynamicFriction = 0.2f;
 	private float bounciness = 0.5f;
-	private PVector size;
-	private PVector anchor;
 
 	private static enum MeshType {
 		CIRCLE, POLYGON
@@ -79,6 +83,22 @@ public class CollisionMesh implements Component, PhysicalObject {
 	}
 
 	public void setVelocity(PVector velocity) {
+	}
+
+	public float getOrientation() {
+		return 0;
+	}
+
+	public void setOrientation(float angle) {
+		vertices = Polygons.getRotatedVertices(storageVertices, anchor, angle);
+	}
+
+	public float getRotationalVelocity() {
+		return 0;
+	}
+
+	public void setRotationalVelocity(float velocity) {
+		return;
 	}
 
 	////////////////////////////
@@ -228,6 +248,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	public CollisionMesh(PVector anchor, List<PVector> vertices, Map<String, Float> properties) {
 		this.anchor = anchor;
 		this.meshType = MeshType.POLYGON;
+		this.storageVertices = vertices;
 		this.vertices = vertices;
 		setProperties(properties);
 	}

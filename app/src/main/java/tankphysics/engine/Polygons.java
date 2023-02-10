@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import processing.core.PMatrix2D;
 import processing.core.PVector;
 
 /**
@@ -62,6 +63,48 @@ public class Polygons {
 		}
 
 		return uvVertices;
+	}
+
+	//////////////////////
+	// Rotation Methods //
+	//////////////////////
+
+	public static PMatrix2D getRotationMatrix(float angle) {
+		PMatrix2D ret = new PMatrix2D();
+		ret.rotate(angle);
+		return ret;
+	}
+
+	public static List<PVector> getRotatedVertices(List<PVector> vertices, PVector anchor, float angle) {
+		List<PVector> ret = new ArrayList<>();
+		PMatrix2D rotationMatrix = getRotationMatrix(angle);
+		for (PVector v : vertices) {
+			PVector retv = new PVector();
+			rotationMatrix.mult(PVector.sub(v, anchor), retv);
+			ret.add(retv);
+		}
+		return ret;
+	}
+
+	public static PVector getRotatedBoxSize(PVector size, float angle) {
+		List<PVector> block = Polygons.makeSquare(size);
+		PVector min = new PVector(Float.MAX_VALUE, Float.MAX_VALUE);
+		PVector max = new PVector(-Float.MAX_VALUE, -Float.MAX_VALUE);
+		for (PVector v : getRotatedVertices(block, new PVector(), angle)) {
+			if (v.x < min.x) {
+				min.x = v.x;
+			}
+			if (v.y < min.y) {
+				min.y = v.y;
+			}
+			if (v.x > max.x) {
+				max.x = v.x;
+			}
+			if (v.y > max.y) {
+				max.y = v.y;
+			}
+		}
+		return PVector.add(min, max);
 	}
 
 }

@@ -9,6 +9,7 @@ public class RigidBody implements Component, PhysicalObject {
 	private GameObject object;
 	private HashSet<CollisionMesh> hitbox;
 	private PVector anchor = new PVector();
+	private PVector size;
 
 	// Mass and linear force variables.
 	private PVector velocity = new PVector();
@@ -17,6 +18,8 @@ public class RigidBody implements Component, PhysicalObject {
 
 	// Torque related variables.
 	private float rotationalVelocity;
+	private float orientation = 0;
+	private float torque = 1.3f;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -59,8 +62,23 @@ public class RigidBody implements Component, PhysicalObject {
 		return anchor;
 	}
 
+	public float getTorque() {
+		return torque;
+	}
+
 	public float getInverseMass() {
 		return inverseMass;
+	}
+
+	public float getOrientation() {
+		return orientation;
+	}
+
+	public void setOrientation(float angle) {
+		for (CollisionMesh m : hitbox) {
+			m.setOrientation(angle);
+		}
+		this.size = Polygons.getRotatedBoxSize(this.object.getSize(), angle);
 	}
 
 	////////////////////////
@@ -72,6 +90,7 @@ public class RigidBody implements Component, PhysicalObject {
 		for (CollisionMesh m : hitbox) {
 			m.object = object;
 		}
+		this.size = this.object.getSize().copy();
 	}
 
 	public Iterable<CollisionMesh> getMeshes() {
@@ -87,7 +106,7 @@ public class RigidBody implements Component, PhysicalObject {
 	}
 
 	public PVector getSize() {
-		return object.getSize();
+		return size;
 	}
 
 	/////////////////////////////////
