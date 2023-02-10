@@ -19,7 +19,7 @@ public class Game extends PApplet {
 
 		// Make gravity-bound object.
 		bulletCPU = new RigidBody(310.2f);
-		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.2f,
+		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), 0.1f,
 				0.2f);
 		bullet = new GameObject(new PVector(64, 64), new PVector(100, displayHeight - 256), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
@@ -46,7 +46,7 @@ public class Game extends PApplet {
 						loadImage("dirt_block.png"),
 						Polygons.getPolygonUVMapping(Polygons.makeRegularPolygon(new PVector(512, 512), 6),
 								new PVector(-256, -256), new PVector(256, 256), new PVector(128 * 8, 128 * 8))),
-				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 1f, 0.3f));
+				new CollisionMesh(new PVector(), Polygons.makeRegularPolygon(new PVector(512, 512), 6), 0.1f, 0.3f));
 
 		// Make a plane for collision checks.
 		GameObject wall = new GameObject(new PVector(32, 128), new PVector(displayWidth - 76, displayHeight - 96),

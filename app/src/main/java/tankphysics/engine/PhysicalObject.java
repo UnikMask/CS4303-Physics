@@ -70,16 +70,23 @@ public interface PhysicalObject {
 			return false;
 		}
 
+		applyFriction(details);
+
 		// Calculate impulse resolution
 		float totalBounce = details.meshA.getBounciness() * details.meshB.getBounciness();
 		float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal
 				/ (objA.getInverseMass() + objB.getInverseMass());
 		objA.setVelocity(
 				PVector.sub(objA.getVelocity(), PVector.mult(details.normal, impulseFactor * objA.getInverseMass())));
-		System.out.println(objA.getInverseMass());
 		objB.setVelocity(
 				PVector.add(objB.getVelocity(), PVector.mult(details.normal, impulseFactor * objB.getInverseMass())));
-		System.out.println(objB.getInverseMass());
+
+		return applySinkingCorrection(details);
+	}
+
+	public static boolean applySinkingCorrection(CollisionDetails details) {
+		PhysicalObject objA = details.objA;
+		PhysicalObject objB = details.objB;
 
 		// Correct positional sinking between both objects, with jitter threshold
 		float inverseTotalMass = 1 / (objA.getInverseMass() + objB.getInverseMass());
@@ -91,6 +98,23 @@ public interface PhysicalObject {
 		}
 		System.out.println(details);
 		return -details.penetration > CORRECTION_THRESHOLD;
+	}
+
+	public static void applyFriction(CollisionDetails details) {
+		PhysicalObject objA = details.objA;
+		PhysicalObject objB = details.objB;
+
+		// Get tangent of normal in direction of the relative velocity.
+		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
+		float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
+		PVector tan = PVector.sub(relativeVelocity, PVector.mult(details.normal, velocityProjectionOnNormal))
+				.normalize();
+
+		// Factor on friction - breaks object speed on contact by roughness of material.
+		float frictionFactor = -PVector.dot(relativeVelocity, tan) * details.meshA.getRoughness()
+				* details.meshB.getRoughness() / (objA.getInverseMass() + objB.getInverseMass());
+		objA.setVelocity(PVector.sub(objA.getVelocity(), PVector.mult(tan, frictionFactor * objA.getInverseMass())));
+		objB.setVelocity(PVector.add(objB.getVelocity(), PVector.mult(tan, frictionFactor * objB.getInverseMass())));
 	}
 
 	public static boolean applyCollisionAndBounce(PhysicalObject objA, PhysicalObject objB) {

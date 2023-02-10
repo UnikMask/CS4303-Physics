@@ -15,7 +15,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private MeshType meshType;
 	private List<PVector> vertices;
 	private float radius;
-	private float friction;
+	private float friction = 0.5f;
 	private float bounciness;
 	private PVector size;
 	private PVector anchor;
@@ -39,6 +39,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 
 	public float getBounciness() {
 		return bounciness;
+	}
+
+	public float getRoughness() {
+		return friction;
 	}
 
 	///////////////////////
@@ -202,7 +206,6 @@ public class CollisionMesh implements Component, PhysicalObject {
 		this.vertices = vertices;
 		this.friction = roughness;
 		this.bounciness = bounciness;
-		this.bounciness = 1 - roughness;
 	}
 
 	/**
@@ -220,6 +223,5 @@ public class CollisionMesh implements Component, PhysicalObject {
 		this.size = new PVector(radius * 2, radius * 2);
 		this.friction = friction;
 		this.bounciness = bounciness;
-		this.bounciness = 1 - friction;
 	}
 }
