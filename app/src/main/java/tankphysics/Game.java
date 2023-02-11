@@ -11,6 +11,7 @@ public class Game extends PApplet {
 	GameObject camera;
 	GameObject bullet;
 	RigidBody bulletCPU;
+	float angle = 0;
 
 	public void setup() {
 		frameRate(144);

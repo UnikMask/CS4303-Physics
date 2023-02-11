@@ -104,7 +104,7 @@ public class Polygons {
 				max.y = v.y;
 			}
 		}
-		return PVector.add(min, max);
+		return PVector.sub(max, min);
 	}
 
 }

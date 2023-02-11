@@ -87,10 +87,19 @@ public interface PhysicalObject {
 		objB.setVelocity(
 				PVector.add(objB.getVelocity(), PVector.mult(details.normal, impulseFactor * objB.getInverseMass())));
 
+		applyFriction(details, impulseFactor);
+
+		return applySinkingCorrection(details);
+	}
+
+	public static void applyFriction(CollisionDetails details, float normalFactor) {
+		PhysicalObject objA = details.objA;
+		PhysicalObject objB = details.objB;
+
 		// Recalculate relative velocity and velocity along normal for friction
 		// calculation.
-		relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
-		velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
+		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
+		float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
 		PVector tan = PVector.sub(relativeVelocity, PVector.mult(details.normal, velocityProjectionOnNormal))
 				.normalize();
 
@@ -100,13 +109,11 @@ public interface PhysicalObject {
 		float frictionFactor = -PVector.dot(relativeVelocity, tan) / (objA.getInverseMass() + objB.getInverseMass());
 
 		PVector frictionImpulse = PVector.mult(tan, frictionFactor);
-		if (Math.abs(frictionFactor) > Math.abs(staticFactor * impulseFactor)) {
-			frictionImpulse = PVector.mult(tan, -impulseFactor * dynamicFactor);
+		if (Math.abs(frictionFactor) > Math.abs(staticFactor * normalFactor)) {
+			frictionImpulse = PVector.mult(tan, -normalFactor * dynamicFactor);
 		}
 		objA.setVelocity(PVector.sub(objA.getVelocity(), PVector.mult(frictionImpulse, objA.getInverseMass())));
 		objB.setVelocity(PVector.add(objB.getVelocity(), PVector.mult(frictionImpulse, objB.getInverseMass())));
-
-		return applySinkingCorrection(details);
 	}
 
 	public static boolean applySinkingCorrection(CollisionDetails details) {

@@ -25,6 +25,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private float staticFriction = 1f;
 	private float dynamicFriction = 1f;
 	private float bounciness = 1f;
+	private float ROTATION_CALC_TRESHOLD = 0.0001f;
+	private float savedAngle;
 
 	private static enum MeshType {
 		CIRCLE, POLYGON
@@ -53,6 +55,21 @@ public class CollisionMesh implements Component, PhysicalObject {
 
 	public float getDynamicFriction() {
 		return dynamicFriction;
+	}
+
+	public void setOrientation(float angle, RigidBody body) {
+		if (Math.abs(angle - this.savedAngle) > ROTATION_CALC_TRESHOLD) {
+			vertices = Polygons.getRotatedVertices(storageVertices, anchor, angle);
+			this.savedAngle = angle;
+		}
+	}
+
+	public int getNumVertices() {
+		return vertices.size();
+	}
+
+	public Iterable<PVector> getVertices() {
+		return vertices;
 	}
 
 	///////////////////////
@@ -90,7 +107,6 @@ public class CollisionMesh implements Component, PhysicalObject {
 	}
 
 	public void setOrientation(float angle) {
-		vertices = Polygons.getRotatedVertices(storageVertices, anchor, angle);
 	}
 
 	public float getRotationalVelocity() {
@@ -99,6 +115,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 
 	public void setRotationalVelocity(float velocity) {
 		return;
+	}
+
+	public float getInverseInertiaSquared() {
+		return 0;
 	}
 
 	////////////////////////////
@@ -229,6 +249,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 				staticFriction = val;
 			} else if (property.equals("bounciness")) {
 				bounciness = val;
+			} else if (property.equals("calc_treshold")) {
+				ROTATION_CALC_TRESHOLD = val;
 			}
 		}
 	}
