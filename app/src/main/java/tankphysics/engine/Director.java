@@ -93,6 +93,7 @@ public class Director {
 	}
 
 	public void togglePause() {
+		deltaT = 0;
 		pause = !pause;
 	}
 
