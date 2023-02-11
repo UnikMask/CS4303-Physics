@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -114,10 +115,26 @@ public class Director {
 			for (Component c : obj.getComponents()) {
 				if (c instanceof VisualModel && visuals.contains(c)) {
 					visuals.remove(c);
-				} else if (c instanceof RigidBody && bodies.containsKey(c)) {
-					bodies.remove(c);
-				} else if (c instanceof CollisionMesh && colliders.contains(c)) {
-					colliders.remove(c);
+				}
+				if (c instanceof PhysicalObject && (bodies.containsKey(c) || colliders.contains(c))) {
+					PhysicalObject cPhys = (PhysicalObject) c;
+					if (c instanceof RigidBody) {
+						bodies.remove(c);
+					} else if (c instanceof CollisionMesh) {
+						colliders.remove(c);
+					}
+					HashSet<Pair> objPairs = objectMap.get(c);
+					Iterator<Pair> setIterator = activePairs.iterator();
+					while (setIterator.hasNext()) {
+						Pair next = setIterator.next();
+						if (objPairs.contains(next)) {
+							setIterator.remove();
+						}
+					}
+					for (Pair next : objPairs) {
+						PhysicalObject rm = next.obj1 == c ? next.obj2 : next.obj1;
+						objectMap.get(rm).remove(next);
+					}
 				}
 			}
 			for (GameObject o : obj.getChildren()) {

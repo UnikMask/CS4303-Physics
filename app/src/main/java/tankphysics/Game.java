@@ -11,6 +11,7 @@ public class Game extends PApplet {
 	GameObject camera;
 	GameObject bullet;
 	RigidBody bulletCPU;
+	GameObject duplicateBullet;
 	float angle = 0;
 
 	public void setup() {
@@ -32,9 +33,9 @@ public class Game extends PApplet {
 
 		RigidBody duplicateCPU = new RigidBody(31.1f);
 		CollisionMesh dupMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), null);
-		GameObject duplicateBullet = new GameObject(new PVector(64, 64),
-				new PVector(displayWidth - 100, displayHeight - 128), false,
-				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), color(128)), duplicateCPU);
+		duplicateBullet = new GameObject(new PVector(64, 64), new PVector(displayWidth - 100, displayHeight - 128),
+				false, new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), color(128)),
+				duplicateCPU);
 		duplicateCPU.attachToHitbox(dupMesh);
 
 		// Make a plane for collision checks.
@@ -80,6 +81,9 @@ public class Game extends PApplet {
 	public void keyReleased() {
 		if (key == 'w') {
 			engineDirector.togglePause();
+		}
+		if (key == 's') {
+			engineDirector.disattach(duplicateBullet);
 		}
 	}
 
