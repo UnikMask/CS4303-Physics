@@ -13,20 +13,20 @@ import processing.core.PVector;
 public class Director {
 	// World
 	private PApplet sketch;
-	private HashSet<GameObject> world;
+	private HashSet<GameObject> world = new HashSet<>();
 	private float targetSecondsPerFrame = 1f / 144;
 
 	// Visuals
 	private GameObject camera;
-	private HashSet<VisualModel> visuals;
+	private HashSet<VisualModel> visuals = new HashSet<>();
 
 	// Forces
 	private long lastTimeStamp = new Date().getTime();
 	private float deltaT = 0;
 	private final Force GRAVITY = new Force(new PVector(0, 9.18f), false, true);
 	private final float PIXELS_PER_UNIT = 64.0f;
-	private HashMap<RigidBody, HashSet<Force>> bodies;
-	private HashSet<CollisionMesh> collisions;
+	private HashMap<RigidBody, HashSet<Force>> bodies = new HashMap<>();
+	private HashSet<PhysicalObject> colliders = new HashSet<>();
 	public boolean pause = false;
 
 	// Force handling
@@ -116,8 +116,8 @@ public class Director {
 					visuals.remove(c);
 				} else if (c instanceof RigidBody && bodies.containsKey(c)) {
 					bodies.remove(c);
-				} else if (c instanceof CollisionMesh && collisions.contains(c)) {
-					collisions.remove(c);
+				} else if (c instanceof CollisionMesh && colliders.contains(c)) {
+					colliders.remove(c);
 				}
 			}
 			for (GameObject o : obj.getChildren()) {
@@ -150,10 +150,10 @@ public class Director {
 						objectMap.get(b).add(newPair);
 					}
 					if (c instanceof CollisionMesh) {
-						collisions.add((CollisionMesh) c);
+						colliders.add(cPhys);
 					} else {
 						// Add all collision mesh interactions to list of pairs.
-						for (CollisionMesh mesh : collisions) {
+						for (PhysicalObject mesh : colliders) {
 							Pair newPair = new Pair(cPhys, mesh);
 							activePairs.add(newPair);
 							objectMap.get(cPhys).add(newPair);
@@ -231,10 +231,6 @@ public class Director {
 	 * Constructor for a director object.
 	 */
 	public Director(PApplet sketch) {
-		world = new HashSet<>();
-		visuals = new HashSet<>();
-		bodies = new HashMap<>();
-		collisions = new HashSet<>();
 		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight),
 				new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2));
 		attach(camera);

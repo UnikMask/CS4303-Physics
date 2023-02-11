@@ -151,16 +151,13 @@ public class RigidBody implements Component, PhysicalObject {
 	private void calculateAndStoreInertia() {
 		float inertia = 0;
 
-		for (CollisionMesh m : hitbox) {
-			for (PVector v : m.getVertices()) {
-				inertia += (float) Math.pow(PVector.sub(v, anchor).mag(), 2)
-						* (getMass() / (hitbox.size() * m.getNumVertices()));
-			}
-		}
-		inverseInertia = 1 / inertia;
-		// inverseInertia = 1
-		// / ((mass / 12) * (float) (Math.pow(object.getSize().x, 2) +
-		// Math.pow(object.getSize().y, 2)));
+		/*
+		 * for (CollisionMesh m : hitbox) { for (PVector v : m.getVertices()) { inertia
+		 * += (float) Math.pow(PVector.sub(v, anchor).mag(), 2) (getMass() /
+		 * (hitbox.size() * m.getNumVertices())); } } inverseInertia = 1 / inertia;
+		 */
+		inverseInertia = 1
+				/ ((mass / 12) * (float) (Math.pow(object.getSize().x, 2) + Math.pow(object.getSize().y, 2)));
 	}
 
 	/**
@@ -195,7 +192,7 @@ public class RigidBody implements Component, PhysicalObject {
 		// Update new velocity to the game object's position.
 		object.setPosition(PVector.add(object.getPosition(), PVector.mult(velocity, pixelsPerUnit * deltaT)));
 		setRotationalVelocity(getRotationalVelocity() + torque * deltaT);
-		setOrientation(getOrientation() + getRotationalVelocity() * 30 * deltaT);
+		setOrientation(getOrientation() + getRotationalVelocity() * 57 * deltaT);
 	}
 
 	/**

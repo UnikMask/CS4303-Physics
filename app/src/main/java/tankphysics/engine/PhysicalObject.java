@@ -125,7 +125,9 @@ public interface PhysicalObject {
 
 		// Recalculate relative velocity and velocity along normal for friction
 		// calculation.
-		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
+		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity())
+				.sub(new PVector(-radiusA.y, radiusA.x).mult(objA.getRotationalVelocity()))
+				.add(new PVector(-radiusB.y, radiusB.x).mult(objB.getRotationalVelocity()));
 		PVector tan = PVector
 				.sub(relativeVelocity, PVector.mult(details.normal, PVector.dot(relativeVelocity, details.normal)))
 				.normalize();
@@ -137,7 +139,7 @@ public interface PhysicalObject {
 		float frictionFactor = -velocityProjectionOnTan / factorDiv;
 
 		PVector frictionImpulse = PVector.mult(tan, frictionFactor);
-		if (Math.abs(frictionFactor) > Math.abs(staticFactor * normalFactor)) {
+		if (Math.abs(frictionFactor) > staticFactor * normalFactor) {
 			frictionImpulse = PVector.mult(tan, -normalFactor * dynamicFactor);
 		}
 		objA.applyImpulse(PVector.mult(frictionImpulse, -1), radiusA);
