@@ -25,7 +25,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private float staticFriction = 1f;
 	private float dynamicFriction = 1f;
 	private float bounciness = 1f;
-	private float ROTATION_CALC_TRESHOLD = 0.0001f;
+	private float ROTATION_CALC_TRESHOLD = 0;
 	private float savedAngle;
 
 	private static enum MeshType {
@@ -117,8 +117,16 @@ public class CollisionMesh implements Component, PhysicalObject {
 		return;
 	}
 
-	public float getInverseInertiaSquared() {
+	public float getInverseInertia() {
 		return 0;
+	}
+
+	public PVector getCOM() {
+		return anchor;
+	}
+
+	public void applyImpulse(PVector impulse, PVector contactPt) {
+		return;
 	}
 
 	////////////////////////////

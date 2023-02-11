@@ -21,7 +21,7 @@ public class Game extends PApplet {
 		// Set up vertices for blocks
 
 		// Make gravity-bound object.
-		bulletCPU = new RigidBody(310.2f);
+		bulletCPU = new RigidBody(31.2f);
 		CollisionMesh bulletMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), null);
 		bullet = new GameObject(new PVector(64, 64), new PVector(100, displayHeight - 256), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(64, 64)), loadImage("dirt_block.png"),
@@ -30,7 +30,7 @@ public class Game extends PApplet {
 				bulletCPU);
 		bulletCPU.attachToHitbox(bulletMesh);
 
-		RigidBody duplicateCPU = new RigidBody(31.1f);
+		RigidBody duplicateCPU = new RigidBody(331.1f);
 		CollisionMesh dupMesh = new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(64, 64)), null);
 		GameObject duplicateBullet = new GameObject(new PVector(64, 64),
 				new PVector(displayWidth - 100, displayHeight - 128), false,
@@ -41,7 +41,7 @@ public class Game extends PApplet {
 		GameObject plane = new GameObject(new PVector(1800, 32), new PVector(960, displayHeight - 16), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1800, 32)), color(255)),
 				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1800, 32)),
-						Map.ofEntries(Map.entry("staticFriction", 1f), Map.entry("dynamicFriction", 1.5f),
+						Map.ofEntries(Map.entry("staticFriction", 0.7f), Map.entry("dynamicFriction", 1.5f),
 								Map.entry("bounciness", 0.3f))));
 
 		GameObject hexagon = new GameObject(new PVector(512, 512), new PVector(displayWidth / 2, 3 * displayHeight / 4),
@@ -78,12 +78,9 @@ public class Game extends PApplet {
 	}
 
 	public void keyReleased() {
-		if (key == CODED) {
-			if (keyCode == UP) {
-				engineDirector.togglePause();
-			}
+		if (key == 'w') {
+			engineDirector.togglePause();
 		}
-
 	}
 
 	public void draw() {

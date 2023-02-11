@@ -15,7 +15,7 @@ public class RigidBody implements Component, PhysicalObject {
 	private PVector velocity = new PVector();
 	private float mass;
 	private float inverseMass;
-	private float inverseInertiaSquared;
+	private float inverseInertia;
 
 	// Torque related variables.
 	private float rotationalVelocity = 0f;
@@ -58,7 +58,7 @@ public class RigidBody implements Component, PhysicalObject {
 		return object;
 	}
 
-	public PVector getAnchor() {
+	public PVector getCOM() {
 		return anchor;
 	}
 
@@ -69,8 +69,8 @@ public class RigidBody implements Component, PhysicalObject {
 		this.size = Polygons.getRotatedBoxSize(this.object.getSize(), angle);
 	}
 
-	public float getInverseInertiaSquared() {
-		return inverseInertiaSquared;
+	public float getInverseInertia() {
+		return inverseInertia;
 	}
 
 	////////////////////////
@@ -124,7 +124,11 @@ public class RigidBody implements Component, PhysicalObject {
 	/////////////////////////////////
 
 	public void applyImpulse(PVector impulse, PVector contactPt) {
-		velocity = PVector.add(velocity, PVector.mult(impulse, inverseMass));
+		velocity = PVector.add(velocity, PVector.mult(impulse, getInverseMass()));
+		rotationalVelocity += inverseInertia * contactPt.cross(impulse).z;
+		System.out.println("Angular impulse: " + inverseInertia * contactPt.cross(impulse).z);
+		System.out.println("Inverse inertia: " + inverseInertia);
+		System.out.println("Impulse: [" + impulse.x + ", " + impulse.y + "]");
 	}
 
 	/**
@@ -149,11 +153,14 @@ public class RigidBody implements Component, PhysicalObject {
 
 		for (CollisionMesh m : hitbox) {
 			for (PVector v : m.getVertices()) {
-				inertia += (float) Math
-						.pow(PVector.sub(v, anchor).mag() * getMass() / (hitbox.size() * m.getNumVertices()), 2);
+				inertia += (float) Math.pow(PVector.sub(v, anchor).mag(), 2)
+						* (getMass() / (hitbox.size() * m.getNumVertices()));
 			}
 		}
-		inverseInertiaSquared = 1 / (float) Math.pow(inertia, 2);
+		inverseInertia = 1 / inertia;
+		// inverseInertia = 1
+		// / ((mass / 12) * (float) (Math.pow(object.getSize().x, 2) +
+		// Math.pow(object.getSize().y, 2)));
 	}
 
 	/**
@@ -186,9 +193,9 @@ public class RigidBody implements Component, PhysicalObject {
 			velocity.add(PVector.mult(acc, deltaT));
 		});
 		// Update new velocity to the game object's position.
-		setRotationalVelocity(getRotationalVelocity() + torque * deltaT);
 		object.setPosition(PVector.add(object.getPosition(), PVector.mult(velocity, pixelsPerUnit * deltaT)));
-		setOrientation(getOrientation() + getRotationalVelocity() * deltaT);
+		setRotationalVelocity(getRotationalVelocity() + torque * deltaT);
+		setOrientation(getOrientation() + getRotationalVelocity() * 30 * deltaT);
 	}
 
 	/**

@@ -6,8 +6,12 @@ import processing.core.PVector;
  * Interface for physical objects, used in collision calculations.
  */
 public interface PhysicalObject {
-	public static final float CORRECTION_THRESHOLD = 0.1f;
-	public static final float CORRECTION_PERCENTAGE = 0.5f;
+	public static final float CORRECTION_THRESHOLD = 0.01f;
+	public static final float CORRECTION_PERCENTAGE = 0.2f;
+
+	///////////////////////
+	// Interface Methods //
+	///////////////////////
 
 	public float getInverseMass();
 
@@ -29,7 +33,17 @@ public interface PhysicalObject {
 
 	public void setVelocity(PVector velocity);
 
+	public PVector getCOM();
+
+	public float getInverseInertia();
+
 	public Iterable<CollisionMesh> getMeshes();
+
+	public void applyImpulse(PVector impulse, PVector affectPt);
+
+	////////////////////
+	// Static Methods //
+	////////////////////
 
 	/**
 	 * Get collision details between 2 objects. Returns null if the 2 objects are
@@ -71,8 +85,14 @@ public interface PhysicalObject {
 		PhysicalObject objA = details.objA;
 		PhysicalObject objB = details.objB;
 
+		// Get radius of the affected point on A and B
+		PVector radiusA = PVector.sub(details.affectPoint, objA.getCOM()).sub(objA.getPosition());
+		PVector radiusB = PVector.sub(details.affectPoint, objB.getCOM()).sub(objB.getPosition());
+
 		// Check if objects are moving into each other from the normal's point of view.
-		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
+		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity())
+				.sub(new PVector(-radiusA.y, radiusA.x).mult(objA.getRotationalVelocity()))
+				.add(new PVector(-radiusB.y, radiusB.x).mult(objB.getRotationalVelocity()));
 		float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
 		if (velocityProjectionOnNormal > 0) {
 			return false;
@@ -80,40 +100,48 @@ public interface PhysicalObject {
 
 		// Calculate impulse resolution
 		float totalBounce = details.meshA.getBounciness() * details.meshB.getBounciness();
-		float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal
-				/ (objA.getInverseMass() + objB.getInverseMass());
-		objA.setVelocity(
-				PVector.sub(objA.getVelocity(), PVector.mult(details.normal, impulseFactor * objA.getInverseMass())));
-		objB.setVelocity(
-				PVector.add(objB.getVelocity(), PVector.mult(details.normal, impulseFactor * objB.getInverseMass())));
+		float radACrossNormal = (float) Math.pow(radiusA.cross(details.normal).z, 2);
+		float radBCrossNormal = (float) Math.pow(radiusB.cross(details.normal).z, 2);
+		float factorDiv = objA.getInverseMass() + objB.getInverseMass() + radACrossNormal * objA.getInverseInertia()
+				+ radBCrossNormal * objB.getInverseInertia();
+		float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal / factorDiv;
+		PVector impulse = PVector.mult(details.normal, impulseFactor);
 
-		applyFriction(details, impulseFactor);
+		objA.applyImpulse(PVector.mult(impulse, -1), radiusA);
+		objB.applyImpulse(impulse, radiusB);
+
+		applyFriction(details, impulseFactor, factorDiv);
 
 		return applySinkingCorrection(details);
 	}
 
-	public static void applyFriction(CollisionDetails details, float normalFactor) {
+	public static void applyFriction(CollisionDetails details, float normalFactor, float factorDiv) {
 		PhysicalObject objA = details.objA;
 		PhysicalObject objB = details.objB;
+
+		// Get radius of the affected point on A and B
+		PVector radiusA = PVector.sub(details.affectPoint, objA.getCOM()).sub(objA.getPosition());
+		PVector radiusB = PVector.sub(details.affectPoint, objB.getCOM()).sub(objB.getPosition());
 
 		// Recalculate relative velocity and velocity along normal for friction
 		// calculation.
 		PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
-		float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
-		PVector tan = PVector.sub(relativeVelocity, PVector.mult(details.normal, velocityProjectionOnNormal))
+		PVector tan = PVector
+				.sub(relativeVelocity, PVector.mult(details.normal, PVector.dot(relativeVelocity, details.normal)))
 				.normalize();
+		float velocityProjectionOnTan = PVector.dot(relativeVelocity, tan);
 
 		// Factor on friction - breaks object speed on contact by roughness of material.
 		float staticFactor = details.meshA.getStaticFriction() * details.meshB.getStaticFriction();
 		float dynamicFactor = details.meshA.getDynamicFriction() * details.meshB.getDynamicFriction();
-		float frictionFactor = -PVector.dot(relativeVelocity, tan) / (objA.getInverseMass() + objB.getInverseMass());
+		float frictionFactor = -velocityProjectionOnTan / factorDiv;
 
 		PVector frictionImpulse = PVector.mult(tan, frictionFactor);
 		if (Math.abs(frictionFactor) > Math.abs(staticFactor * normalFactor)) {
 			frictionImpulse = PVector.mult(tan, -normalFactor * dynamicFactor);
 		}
-		objA.setVelocity(PVector.sub(objA.getVelocity(), PVector.mult(frictionImpulse, objA.getInverseMass())));
-		objB.setVelocity(PVector.add(objB.getVelocity(), PVector.mult(frictionImpulse, objB.getInverseMass())));
+		objA.applyImpulse(PVector.mult(frictionImpulse, -1), radiusA);
+		objB.applyImpulse(frictionImpulse, radiusB);
 	}
 
 	public static boolean applySinkingCorrection(CollisionDetails details) {

@@ -175,7 +175,7 @@ public class Director {
 		lastTimeStamp = currentTime;
 
 		// Update loop
-		while (deltaT > targetSecondsPerFrame) {
+		while (!pause && deltaT > targetSecondsPerFrame) {
 			for (GameObject o : world) {
 				o.update();
 			}
