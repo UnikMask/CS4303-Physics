@@ -18,6 +18,8 @@ gradpe-app.setting
 *.ipr
 *.iws
 .classpath
+.settings
+.project
 
 # Ignore Gradle build output directory
 build
