@@ -62,7 +62,7 @@ public class Game extends PApplet {
 		engineDirector.attach(plane, bullet, wall, hexagon, duplicateBullet);
 
 		// Give initial velocity to bullet.
-		bulletCPU.setVelocity(new PVector(10, -10));
+		bulletCPU.setVelocity(new PVector(2, -10));
 		duplicateCPU.setVelocity(new PVector(-8, -10));
 
 		// Set initial camera position and zoom
