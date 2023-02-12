@@ -25,7 +25,6 @@ public class Director {
 	private long lastTimeStamp = new Date().getTime();
 	private float deltaT = 0;
 	private final Force GRAVITY = new Force(new PVector(0, 9.18f), false, true);
-	private final float PIXELS_PER_UNIT = 64.0f;
 	private HashMap<RigidBody, HashSet<Force>> bodies = new HashMap<>();
 	private HashSet<PhysicalObject> colliders = new HashSet<>();
 	public boolean pause = false;
@@ -33,6 +32,8 @@ public class Director {
 	// Force handling
 	private HashMap<PhysicalObject, HashSet<Pair>> objectMap = new HashMap<>();
 	private HashSet<Pair> activePairs = new HashSet<>();
+
+	// Event listeners
 
 	class Pair {
 		PhysicalObject obj1;
@@ -135,6 +136,7 @@ public class Director {
 						PhysicalObject rm = next.obj1 == c ? next.obj2 : next.obj1;
 						objectMap.get(rm).remove(next);
 					}
+					objectMap.remove(c);
 				}
 			}
 			for (GameObject o : obj.getChildren()) {
@@ -221,7 +223,7 @@ public class Director {
 	public void update() {
 		// Apply forces to rigid bodies
 		for (RigidBody b : bodies.keySet()) {
-			b.apply(bodies.get(b).stream(), targetSecondsPerFrame, PIXELS_PER_UNIT);
+			b.apply(bodies.get(b).stream(), targetSecondsPerFrame);
 		}
 
 		// Apply collision check for inert mesh to rigid body

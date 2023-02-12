@@ -181,7 +181,7 @@ public class RigidBody implements Component, PhysicalObject {
 	 * @param forces The list of forces to apply to the rigid body.
 	 * @param deltaT The amount of time
 	 */
-	public void apply(Stream<Force> forces, float deltaT, float pixelsPerUnit) {
+	public void apply(Stream<Force> forces, float deltaT) {
 		forces.forEach((f) -> {
 			PVector acc = f.getVectorForce();
 			if (!f.isMassProportional()) {
@@ -190,9 +190,9 @@ public class RigidBody implements Component, PhysicalObject {
 			velocity.add(PVector.mult(acc, deltaT));
 		});
 		// Update new velocity to the game object's position.
-		object.setPosition(PVector.add(object.getPosition(), PVector.mult(velocity, pixelsPerUnit * deltaT)));
+		object.setPosition(PVector.add(object.getPosition(), PVector.mult(velocity, deltaT)));
 		setRotationalVelocity(getRotationalVelocity() + torque * deltaT);
-		setOrientation(getOrientation() + getRotationalVelocity() * 57 * deltaT);
+		setOrientation(getOrientation() + getRotationalVelocity() * deltaT);
 	}
 
 	/**
