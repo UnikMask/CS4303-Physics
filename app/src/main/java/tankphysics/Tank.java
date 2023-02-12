@@ -19,7 +19,7 @@ public class Tank extends GameObject {
 	private static final float TANK_MASS = 6200;
 	private RigidBody tankBody;
 
-	public RigidBody getTankBody() {
+	public RigidBody getRigidBody() {
 		return tankBody;
 	}
 
