@@ -13,6 +13,8 @@ public interface PhysicalObject {
 	// Interface Methods //
 	///////////////////////
 
+	public GameObject getObject();
+
 	public float getInverseMass();
 
 	public PVector getVelocity();

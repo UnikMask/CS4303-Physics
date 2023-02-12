@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -33,8 +34,14 @@ public class Director {
 	private HashMap<PhysicalObject, HashSet<Pair>> objectMap = new HashMap<>();
 	private HashSet<Pair> activePairs = new HashSet<>();
 
-	// Event listeners
+	// Director's event listener list
+	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
+			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("keyPressed", new Hashset<>()),
+						  Map.entry("keyReleased", new HashSet<>())));
+	private HashMap<EventListener, String> listenerToId = new HashMap<>();
 
+	// Class representing a pair of physical objects interacting together in
+	// collisions.
 	class Pair {
 		PhysicalObject obj1;
 		PhysicalObject obj2;
@@ -231,14 +238,85 @@ public class Director {
 		while (!queue.isEmpty()) {
 			Pair next = queue.pop();
 			if (PhysicalObject.requiresCollisionCheck(next.obj1, next.obj2)) {
-				boolean moved = PhysicalObject.applyCollisionAndBounce(next.obj1, next.obj2);
-				if (moved) {
+				boolean collided = PhysicalObject.applyCollisionAndBounce(next.obj1, next.obj2);
+
+				// Add previous object linked pairs to queue for collision recalculation.
+				if (collided) {
 					HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
 					nextElements.addAll(objectMap.get(next.obj1));
 					nextElements.remove(next);
 					queue.addAll(nextElements);
+
+					// Call on hit events on both GameObjects.
+					for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
+						l.call(next.obj2);
+					}
+					for (EventListener l : next.obj2.getObject().getListeners("onHit")) {
+						l.call(next.obj1);
+					}
 				}
 			}
+		}
+	}
+
+	////////////////////////////
+	// Event Listener Methods //
+	////////////////////////////
+
+	/**
+	 * Attach an event listener to the given event.
+	 *
+	 * @param id       The ID of the event listener. The ID must exist for the
+	 *                 director or the listener object is rejected.
+	 * @param listener The listener to attach to the Director.
+	 *
+	 * @return Whether the listener was successfully attached or not.
+	 */
+	public boolean attachEventListener(String id, EventListener listener) {
+		if (listeners.containsKey(id) || listenerToId.containsKey(listener)) {
+			return false;
+		}
+		listeners.get(id).add(listener);
+		listenerToId.put(listener, id);
+		return true;
+	}
+
+	/**
+	 * Disattach an event listener from the given event.
+	 *
+	 * @param listener The listener to disattach from the Director. The listener
+	 *                 must actually be attached to the Director.
+	 *
+	 * @return Whether the listener was successfully disattached or not.
+	 */
+	public boolean disattachEventListener(EventListener listener) {
+		if (!listenerToId.containsKey(listener)) {
+			return false;
+		}
+		listeners.get(listenerToId.get(listener)).remove(listener);
+		listenerToId.remove(listener);
+		return true;
+	}
+
+	/**
+	 * Call key pressed events on receiving a key.
+	 *
+	 * @param key The last key pressed.
+	 */
+	public void keyPressed(String key) {
+		for (EventListener l : listeners.get("keyPressed")) {
+			l.call(null, key);
+		}
+	}
+
+	/**
+	 * Call key released events on releasing a key.
+	 *
+	 * @param key The last key released.
+	 */
+	public void keyReleased(String key) {
+		for (EventListener l : listeners.get("keyReleased")) {
+			l.call(null, key);
 		}
 	}
 

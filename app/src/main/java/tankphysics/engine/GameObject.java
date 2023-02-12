@@ -2,6 +2,8 @@ package tankphysics.engine;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterable;
 import processing.core.PVector;
 
 public class GameObject {
@@ -12,6 +14,11 @@ public class GameObject {
 	private HashSet<Component> components;
 	private HashSet<GameObject> children;
 	private float rotation = 0;
+
+	// Event listener list
+	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
+			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("onHit", new HashSet<>())));
+	private HashMap<EventListener, String> listenerToId = new HashMap<>();
 
 	/////////////////////////
 	// Getters and Setters //
@@ -68,6 +75,13 @@ public class GameObject {
 		}
 	}
 
+	public Iterable<EventListener> getListeners(String id) {
+		if (!listeners.containsKey(id)) {
+			return false;
+		}
+		return listeners.get(id);
+	}
+
 	////////////////////////
 	// GameObject methods //
 	////////////////////////
@@ -92,6 +106,45 @@ public class GameObject {
 				child.move(increment);
 		});
 		position = PVector.add(position, increment);
+	}
+
+	////////////////////////////
+	// Event Listener Methods //
+	////////////////////////////
+
+	/**
+	 * Attach an event listener to the given event.
+	 *
+	 * @param id       The ID of the event listener. The ID must exist for the
+	 *                 director or the listener object is rejected.
+	 * @param listener The listener to attach to the Director.
+	 *
+	 * @return Whether the listener was successfully attached or not.
+	 */
+	public boolean attachEventListener(String id, EventListener listener) {
+		if (listeners.containsKey(id) || listenerToId.containsKey(listener)) {
+			return false;
+		}
+		listeners.get(id).add(listener);
+		listenerToId.put(listener, id);
+		return true;
+	}
+
+	/**
+	 * Disattach an event listener from the given event.
+	 *
+	 * @param listener The listener to disattach from the Director. The listener
+	 *                 must actually be attached to the Director.
+	 *
+	 * @return Whether the listener was successfully disattached or not.
+	 */
+	public boolean disattachEventListener(EventListener listener) {
+		if (!listenerToId.containsKey(listener)) {
+			return false;
+		}
+		listeners.get(listenerToId.get(listener)).remove(listener);
+		listenerToId.remove(listener);
+		return true;
 	}
 
 	//////////////////
