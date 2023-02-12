@@ -36,8 +36,8 @@ public class Director {
 
 	// Director's event listener list
 	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
-			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("keyPressed", new Hashset<>()),
-						  Map.entry("keyReleased", new HashSet<>())));
+			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("keyPressed", new HashSet<>()),
+					Map.entry("keyReleased", new HashSet<>())));
 	private HashMap<EventListener, String> listenerToId = new HashMap<>();
 
 	// Class representing a pair of physical objects interacting together in
@@ -204,14 +204,19 @@ public class Director {
 		// Update loop
 		while (!pause && deltaT > targetSecondsPerFrame) {
 			for (GameObject o : world) {
+				for (EventListener l : o.getListeners("update")) {
+					l.call(null);
+				}
 				o.update();
+			}
+			for (EventListener l : listeners.get("update")) {
+				l.call(null);
 			}
 			update();
 			deltaT -= targetSecondsPerFrame;
 		}
 		// Draw the image after all updates have been made.
 		draw();
-
 	}
 
 	/**
@@ -249,10 +254,10 @@ public class Director {
 
 					// Call on hit events on both GameObjects.
 					for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
-						l.call(next.obj2);
+						l.call(next.obj2.getObject());
 					}
 					for (EventListener l : next.obj2.getObject().getListeners("onHit")) {
-						l.call(next.obj1);
+						l.call(next.obj1.getObject());
 					}
 				}
 			}

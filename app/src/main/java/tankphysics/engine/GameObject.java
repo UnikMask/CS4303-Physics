@@ -3,7 +3,7 @@ package tankphysics.engine;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Iterable;
+import java.util.Map;
 import processing.core.PVector;
 
 public class GameObject {
@@ -77,7 +77,7 @@ public class GameObject {
 
 	public Iterable<EventListener> getListeners(String id) {
 		if (!listeners.containsKey(id)) {
-			return false;
+			return null;
 		}
 		return listeners.get(id);
 	}
