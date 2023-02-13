@@ -247,10 +247,10 @@ public class Director {
 
 				// Add previous object linked pairs to queue for collision recalculation.
 				if (collided) {
-					HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
-					nextElements.addAll(objectMap.get(next.obj1));
-					nextElements.remove(next);
-					queue.addAll(nextElements);
+					// HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
+					// nextElements.addAll(objectMap.get(next.obj1));
+					// nextElements.remove(next);
+					// queue.addAll(nextElements);
 
 					// Call on hit events on both GameObjects.
 					for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
