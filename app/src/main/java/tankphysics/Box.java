@@ -12,21 +12,21 @@ import tankphysics.engine.VisualPolygon;
 
 public class Box extends GameObject {
 	private static final Map<String, Float> boxSurface = Map.ofEntries(Map.entry("bounciness", 0.3f),
-			Map.entry("staticFriction", 0.5f), Map.entry("dynamicFriction", 1f));
+			Map.entry("staticFriction", 1.2f), Map.entry("dynamicFriction", 1f));
 	private RigidBody rigidBody = new RigidBody(BOX_MASS,
-			new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1, 1)), boxSurface));
-	private static final float BOX_MASS = 10;
+			new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1.5f, 1.5f)), boxSurface));
+	private static final float BOX_MASS = 20;
 
 	RigidBody getRigidBody() {
 		return rigidBody;
 	}
 
 	public Box(PVector position, PApplet sketch) {
-		super(new PVector(1, 1), position, false,
-				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1, 1)),
+		super(new PVector(1.5f, 1.5f), position, false,
+				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(1.5f, 1.5f)),
 						sketch.loadImage("box_texture.jpg"),
-						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(1, 1)), new PVector(-0.5f, -0.5f),
-								new PVector(0.5f, 0.5f), new PVector(2400, 2400))));
+						Polygons.getPolygonUVMapping(Polygons.makeSquare(new PVector(1.5f, 1.5f)),
+								new PVector(-0.75f, -0.75f), new PVector(0.75f, 0.75f), new PVector(480, 480))));
 		attach(rigidBody);
 	}
 }
