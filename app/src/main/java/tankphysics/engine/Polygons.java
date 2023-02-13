@@ -86,6 +86,13 @@ public class Polygons {
 		return ret;
 	}
 
+	public static PVector getRotatedVector(PVector vector, float angle) {
+		PMatrix2D rotationMatrix = getRotationMatrix(angle);
+		PVector ret = new PVector();
+		rotationMatrix.mult(vector, ret);
+		return ret;
+	}
+
 	public static PVector getRotatedBoxSize(PVector size, float angle) {
 		List<PVector> block = Polygons.makeSquare(size);
 		PVector min = new PVector(Float.MAX_VALUE, Float.MAX_VALUE);

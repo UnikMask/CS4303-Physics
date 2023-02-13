@@ -30,8 +30,9 @@ public class VisualPolygon extends VisualModel {
 			reloadPShape(sketch);
 		}
 		sketch.pushMatrix();
-		sketch.translate(object.getPosition().x - anchor.x, object.getPosition().y - anchor.y);
+		sketch.translate(object.getPosition().x, object.getPosition().y);
 		sketch.rotate(object.getRotation());
+		sketch.translate(-anchor.x, -anchor.y);
 		sketch.textureWrap(PApplet.REPEAT);
 		sketch.shape(polygonShape, 0, 0);
 		sketch.popMatrix();

@@ -20,12 +20,13 @@ public class CollisionMesh implements Component, PhysicalObject {
 
 	private PVector size;
 	private PVector anchor;
+	private PVector savedAnchor;
 
 	// Material Properties
 	private float staticFriction = 1f;
 	private float dynamicFriction = 1f;
 	private float bounciness = 1f;
-	private float ROTATION_CALC_TRESHOLD = 0;
+	private float ROTATION_CALC_TRESHOLD = 0.01f;
 	private float savedAngle;
 
 	private static enum MeshType {
@@ -60,7 +61,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	public void setOrientation(float angle, RigidBody body) {
 		if (Math.abs(angle - this.savedAngle) > ROTATION_CALC_TRESHOLD) {
 			vertices = Polygons.getRotatedVertices(storageVertices, anchor, angle);
+			anchor = Polygons.getRotatedVector(savedAnchor, angle);
 			this.savedAngle = angle;
+			System.out.println("[" + anchor.x + ", " + anchor.y + "]");
 		}
 	}
 
@@ -276,7 +279,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 *                  for the object to move without inertia.
 	 */
 	public CollisionMesh(PVector anchor, List<PVector> vertices, Map<String, Float> properties) {
-		this.anchor = anchor;
+		this.savedAnchor = anchor;
+		this.anchor = anchor.copy();
 		this.meshType = MeshType.POLYGON;
 		this.storageVertices = vertices;
 		this.vertices = vertices;
@@ -292,7 +296,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 *                 for the object to move without inertia.
 	 */
 	public CollisionMesh(PVector anchor, float radius, Map<String, Float> properties) {
-		this.anchor = anchor;
+		this.savedAnchor = anchor;
+		this.anchor = anchor.copy();
 		this.meshType = MeshType.CIRCLE;
 		this.radius = radius;
 		this.size = new PVector(radius * 2, radius * 2);
