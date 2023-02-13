@@ -204,15 +204,12 @@ public class CollisionMesh implements Component, PhysicalObject {
 		PVector tan1 = PVector.sub(p2, p1);
 		PVector tan2 = PVector.sub(p1, p2);
 		Iterator<PVector> iterator = points.iterator();
-		System.out.println("Before: " + points);
 		while (iterator.hasNext()) {
 			PVector v = iterator.next();
 			if (PVector.dot(PVector.sub(v, p1), tan1) < 0 || PVector.dot(PVector.sub(v, p2), tan2) < 0) {
-				System.out.println(PVector.dot(PVector.sub(v, p1), tan1));
 				iterator.remove();
 			}
 		}
-		System.out.println("After: " + points);
 		return points;
 	}
 

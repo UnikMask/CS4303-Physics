@@ -10,7 +10,7 @@ import processing.core.PVector;
  */
 public interface PhysicalObject {
 	public static final float CORRECTION_THRESHOLD = 0.01f;
-	public static final float CORRECTION_PERCENTAGE = 0.2f;
+	public static final float CORRECTION_PERCENTAGE = 0.4f;
 	public static final float SAME_EDGE_THRESHOLD = 0.01f;
 
 	///////////////////////
