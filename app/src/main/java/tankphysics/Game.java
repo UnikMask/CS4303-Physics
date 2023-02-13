@@ -22,15 +22,19 @@ public class Game extends PApplet {
 				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(28.125f, 0.5f)),
 						Map.ofEntries(Map.entry("staticFriction", 0.6f), Map.entry("dynamicFriction", 0.5f),
 								Map.entry("bounciness", 0.3f))));
-		tank = new Tank(new PVector(15, 5), color(255, 0, 0));
+		tank = new Tank(new PVector(3, 14), color(255, 0, 0));
+		GameObject[] boxGrid = new GameObject[9];
+		for (int i = 0; i < 9; i++) {
+			boxGrid[i] = new Box(new PVector(15 + i / 3, 15 - i % 3), this);
+		}
 
 		// Attach all components to director.
-		engineDirector.attach(plane, tank);
+		engineDirector.attach(tank, plane);
+		engineDirector.attach(boxGrid);
 
 		// Set initial camera position and zoom
 		camera.setPosition(tank.getPosition());
-		camera.setSize(PVector.mult(new PVector(30 / 2, 16.875f / 2),
-				1 + (tank.getRigidBody().getVelocity().mag() / (25 * 64))));
+		camera.setSize(new PVector(32, 18));
 	}
 
 	public void settings() {
