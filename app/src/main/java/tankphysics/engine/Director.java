@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import processing.core.PApplet;
+import processing.core.PMatrix2D;
 import processing.core.PVector;
 
 public class Director {
@@ -189,6 +190,9 @@ public class Director {
 					}
 				}
 			}
+			for (GameObject child : object.getChildren()) {
+				attach(child);
+			}
 		}
 	}
 
@@ -272,6 +276,18 @@ public class Director {
 				}
 			}
 		}
+	}
+
+	public PVector getSetVector(PVector originalVector) {
+		PMatrix2D mat = new PMatrix2D();
+		PVector scale = new PVector(((float) sketch.displayWidth) / camera.getSize().x,
+				((float) sketch.displayHeight) / camera.getSize().y);
+		PVector anchoredPos = PVector.sub(camera.getPosition(), PVector.div(camera.getSize(), 2));
+		mat.scale(scale.x, scale.y);
+		mat.translate(-anchoredPos.x, -anchoredPos.y);
+		PVector ret = new PVector();
+		mat.mult(originalVector, ret);
+		return ret;
 	}
 
 	////////////////////////////

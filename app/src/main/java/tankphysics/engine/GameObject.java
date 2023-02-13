@@ -7,18 +7,18 @@ import java.util.Map;
 import processing.core.PVector;
 
 public class GameObject {
-	private PVector position;
-	private PVector size;
-	private boolean followsParent;
+	protected PVector position;
+	protected PVector size;
+	protected boolean followsParent;
 
-	private HashSet<Component> components;
-	private HashSet<GameObject> children;
-	private float rotation = 0;
+	protected HashSet<Component> components;
+	protected HashMap<GameObject, PVector> children;
+	protected float rotation = 0;
 
 	// Event listener list
-	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
+	protected HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
 			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("onHit", new HashSet<>())));
-	private HashMap<EventListener, String> listenerToId = new HashMap<>();
+	protected HashMap<EventListener, String> listenerToId = new HashMap<>();
 
 	/////////////////////////
 	// Getters and Setters //
@@ -40,12 +40,22 @@ public class GameObject {
 		return components;
 	}
 
-	public HashSet<GameObject> getChildren() {
-		return children;
+	public Iterable<GameObject> getChildren() {
+		return children.keySet();
+	}
+
+	public void addChild(GameObject child, PVector offset) {
+		children.put(child, offset);
+		child.setPosition(PVector.add(position, Polygons.getRotatedVector(offset, rotation)));
 	}
 
 	public void setPosition(PVector position) {
 		this.position = position;
+		for (GameObject child : children.keySet()) {
+			if (child.followsParent) {
+				child.position = PVector.add(position, Polygons.getRotatedVector(children.get(child), rotation));
+			}
+		}
 	}
 
 	public void attach(Component component) {
@@ -68,7 +78,7 @@ public class GameObject {
 				((RigidBody) c).setRotation(angle);
 			}
 		}
-		for (GameObject child : children) {
+		for (GameObject child : children.keySet()) {
 			if (child.followsParent) {
 				child.setRotation(angle);
 			}
@@ -90,7 +100,7 @@ public class GameObject {
 	 * Method called on every director update.
 	 */
 	public void update() {
-		for (GameObject c : children) {
+		for (GameObject c : children.keySet()) {
 			c.update();
 		}
 	}
@@ -101,7 +111,7 @@ public class GameObject {
 	 * @param increment The vector to increment to the postion.
 	 */
 	public void move(PVector increment) {
-		children.forEach((child) -> {
+		children.keySet().forEach((child) -> {
 			if (followsParent)
 				child.move(increment);
 		});
@@ -182,6 +192,6 @@ public class GameObject {
 		for (Component c : this.components) {
 			c.attach(this);
 		}
-		children = new HashSet<>();
+		children = new HashMap<>();
 	}
 }
