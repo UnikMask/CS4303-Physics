@@ -201,9 +201,10 @@ public class RigidBody implements Component, PhysicalObject {
 	 * @param roughness The object's roughness - i.e. How sticky the object is on
 	 *                  surfaces without inertia applied.
 	 */
-	public RigidBody(float mass) {
+	public RigidBody(float mass, CollisionMesh... hitbox) {
 		this.mass = mass;
 		this.inverseMass = 1 / mass;
 		this.hitbox = new HashSet<>();
+		attachToHitbox(hitbox);
 	}
 }

@@ -99,7 +99,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	}
 
 	public PVector getPosition() {
-		return object.getPosition();
+		return PVector.add(object.getPosition(), anchor);
 	}
 
 	public void setVelocity(PVector velocity) {
@@ -279,7 +279,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 *                  for the object to move without inertia.
 	 */
 	public CollisionMesh(PVector anchor, List<PVector> vertices, Map<String, Float> properties) {
-		this.savedAnchor = anchor;
+		this.savedAnchor = anchor.copy();
 		this.anchor = anchor.copy();
 		this.meshType = MeshType.POLYGON;
 		this.storageVertices = vertices;
@@ -296,7 +296,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 *                 for the object to move without inertia.
 	 */
 	public CollisionMesh(PVector anchor, float radius, Map<String, Float> properties) {
-		this.savedAnchor = anchor;
+		this.savedAnchor = anchor.copy();
 		this.anchor = anchor.copy();
 		this.meshType = MeshType.CIRCLE;
 		this.radius = radius;

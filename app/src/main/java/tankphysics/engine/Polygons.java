@@ -16,19 +16,20 @@ public class Polygons {
 	// Regular Polygon Methods //
 	/////////////////////////////
 
-	public static List<PVector> makeRegularPolygon(PVector size, int sides, float baseAngle) {
+	public static List<PVector> makeRegularPolygon(PVector size, int sides, float baseAngle, PVector anchor) {
 		List<PVector> vertices = new ArrayList<>();
 
 		float increment = (float) (2 * Math.PI / sides);
 		for (int i = 0; i < sides; i++) {
 			float angle = baseAngle + i * increment;
-			vertices.add(new PVector((float) (size.x / 2 * Math.cos(angle)), (float) (size.y / 2 * Math.sin(angle))));
+			vertices.add(new PVector((float) (anchor.x + size.x / 2 * Math.cos(angle)),
+					(float) (anchor.y + size.y / 2 * Math.sin(angle))));
 		}
 		return vertices;
 	}
 
 	public static List<PVector> makeRegularPolygon(PVector size, int sides) {
-		return makeRegularPolygon(size, sides, (float) Math.PI / 2);
+		return makeRegularPolygon(size, sides, (float) Math.PI / 2, new PVector());
 	}
 
 	////////////////////////////
