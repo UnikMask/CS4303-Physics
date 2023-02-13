@@ -8,6 +8,7 @@ import processing.core.PVector;
 public interface PhysicalObject {
 	public static final float CORRECTION_THRESHOLD = 0.01f;
 	public static final float CORRECTION_PERCENTAGE = 0.2f;
+	public static final float SAME_EDGE_THRESHOLD = 0.01f;
 
 	///////////////////////
 	// Interface Methods //
@@ -68,8 +69,10 @@ public interface PhysicalObject {
 				CollisionDetails collideBtoA = CollisionMesh.queryFaceDist(vB, vA, objB, objA);
 				if (collideBtoA == null) {
 					continue;
-				} else if (collideBtoA.penetration > collideAtoB.penetration) {
+				} else if (collideBtoA.penetration > collideAtoB.penetration + SAME_EDGE_THRESHOLD) {
 					return collideBtoA;
+				} else if (Math.abs(collideBtoA.penetration - collideAtoB.penetration) < SAME_EDGE_THRESHOLD) {
+					collideAtoB.affectPoints.addAll(collideBtoA.affectPoints);
 				}
 				return collideAtoB;
 			}
@@ -88,6 +91,7 @@ public interface PhysicalObject {
 		PhysicalObject objB = details.objB;
 
 		for (PVector affectPoint : details.affectPoints) {
+
 			// Get radius of the affected point on A and B
 			PVector radiusA = PVector.sub(affectPoint, objA.getCOM()).sub(objA.getPosition());
 			PVector radiusB = PVector.sub(affectPoint, objB.getCOM()).sub(objB.getPosition());
@@ -107,6 +111,7 @@ public interface PhysicalObject {
 			float radBCrossNormal = (float) Math.pow(radiusB.cross(details.normal).z, 2);
 			float factorDiv = objA.getInverseMass() + objB.getInverseMass() + radACrossNormal * objA.getInverseInertia()
 					+ radBCrossNormal * objB.getInverseInertia();
+			factorDiv *= details.affectPoints.size();
 			float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal / factorDiv;
 			PVector impulse = PVector.mult(details.normal, impulseFactor);
 
@@ -147,7 +152,6 @@ public interface PhysicalObject {
 			objB.setPosition(PVector.sub(objB.getPosition(), PVector.mult(details.normal,
 					details.penetration * CORRECTION_PERCENTAGE * objB.getInverseMass() * inverseTotalMass)));
 		}
-		System.out.println(details);
 		return -details.penetration > CORRECTION_THRESHOLD;
 	}
 

@@ -1,6 +1,8 @@
 package tankphysics.engine;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +28,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private float staticFriction = 1f;
 	private float dynamicFriction = 1f;
 	private float bounciness = 1f;
-	private float ROTATION_CALC_TRESHOLD = 0.01f;
+
+	// Optimisation features on rotation
+	private float ROTATION_CALC_THRESHOLD = 0.01f;
 	private float savedAngle;
 
 	private static enum MeshType {
@@ -59,11 +63,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 	}
 
 	public void setOrientation(float angle, RigidBody body) {
-		if (Math.abs(angle - this.savedAngle) > ROTATION_CALC_TRESHOLD) {
+		if (Math.abs(angle - this.savedAngle) > ROTATION_CALC_THRESHOLD) {
 			vertices = Polygons.getRotatedVertices(storageVertices, anchor, angle);
 			anchor = Polygons.getRotatedVector(savedAnchor, angle);
 			this.savedAngle = angle;
-			System.out.println("[" + anchor.x + ", " + anchor.y + "]");
 		}
 	}
 
@@ -154,8 +157,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 			return circleQueryFaceDist(polygonA, polygonB, objA, objB);
 		}
 		// Get distance to polygon - Apply SAT.
-		CollisionDetails ret = new CollisionDetails(-Float.MAX_VALUE, objA, objB, polygonA, polygonB, null, null);
+		CollisionDetails ret = new CollisionDetails(-Float.MAX_VALUE, objA, objB, polygonA, polygonB, null,
+				new ArrayList<>());
 		float reverseFactor = 1.0f;
+		PVector p1 = new PVector(), p2 = new PVector();
 
 		for (int i = 0; i < polygonA.vertices.size(); i++) {
 			PVector vertex1 = PVector.add(polygonA.getObject().getPosition(), polygonA.vertices.get(i));
@@ -166,17 +171,21 @@ public class CollisionMesh implements Component, PhysicalObject {
 			// compare distances.
 			PVector planeNormal = new PVector(PVector.sub(vertex2, vertex1).y, -PVector.sub(vertex2, vertex1).x)
 					.mult(reverseFactor).normalize();
-			PVector support = PVector.add(polygonB.getObject().getPosition(),
-					polygonB.getSupportPoint(new PVector(-planeNormal.x, -planeNormal.y)));
-			float dist = PVector.dot(PVector.sub(support, vertex1), planeNormal);
+
+			List<PVector> supports = new ArrayList<>(
+					polygonB.getSupportPoint(new PVector(-planeNormal.x, -planeNormal.y)).stream()
+							.map((v) -> PVector.add(polygonB.getObject().getPosition(), v)).toList());
+			float dist = PVector.dot(PVector.sub(supports.get(0), vertex1), planeNormal);
 
 			// Assume 1st vertex negative - reverse normals if not.
 			if (i == 0 && dist > 0.0f) {
 				reverseFactor = -1.0f;
 				i -= 1;
 			} else if (dist > ret.penetration) {
+				p1 = vertex1;
+				p2 = vertex2;
 				ret.penetration = dist;
-				ret.affectPoints = Arrays.asList(support);
+				ret.affectPoints = supports;
 				ret.normal = planeNormal;
 
 				if (ret.penetration > 0.0f) {
@@ -184,7 +193,27 @@ public class CollisionMesh implements Component, PhysicalObject {
 				}
 			}
 		}
+		ret.affectPoints = cleanFromVoronoiRegions(ret.affectPoints, p1, p2, objB.getPosition());
 		return ret;
+	}
+
+	// Remove points from the list that are not on the edge Voronoi region of the
+	// segment.
+	private static List<PVector> cleanFromVoronoiRegions(List<PVector> points, PVector p1, PVector p2,
+			PVector positionB) {
+		PVector tan1 = PVector.sub(p2, p1);
+		PVector tan2 = PVector.sub(p1, p2);
+		Iterator<PVector> iterator = points.iterator();
+		System.out.println("Before: " + points);
+		while (iterator.hasNext()) {
+			PVector v = iterator.next();
+			if (PVector.dot(PVector.sub(v, p1), tan1) < 0 || PVector.dot(PVector.sub(v, p2), tan2) < 0) {
+				System.out.println(PVector.dot(PVector.sub(v, p1), tan1));
+				iterator.remove();
+			}
+		}
+		System.out.println("After: " + points);
+		return points;
 	}
 
 	/**
@@ -228,20 +257,22 @@ public class CollisionMesh implements Component, PhysicalObject {
 	 *
 	 * @param direction The direction for which the support point is for.
 	 */
-	public PVector getSupportPoint(PVector direction) {
+	public List<PVector> getSupportPoint(PVector direction) {
 		if (meshType == MeshType.POLYGON) {
-			PVector max = vertices.get(0);
-			float maxDot = PVector.dot(max, direction);
+			List<PVector> maxes = new ArrayList<>(Arrays.asList(vertices.get(0)));
+			float maxDot = PVector.dot(maxes.get(0), direction);
 			for (PVector v : vertices) {
 				float dot = v.dot(direction);
-				if (dot > maxDot) {
-					max = v;
+				if (dot > maxDot + PhysicalObject.SAME_EDGE_THRESHOLD) {
+					maxes = new ArrayList<>(Arrays.asList(v));
 					maxDot = dot;
+				} else if (Math.abs(dot - maxDot) < PhysicalObject.SAME_EDGE_THRESHOLD) {
+					maxes.add(v);
 				}
 			}
-			return max;
+			return maxes;
 		} else {
-			return PVector.mult(PVector.fromAngle(direction.heading()), radius);
+			return Arrays.asList(PVector.mult(PVector.fromAngle(direction.heading()), radius));
 		}
 	}
 
@@ -261,7 +292,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 			} else if (property.equals("bounciness")) {
 				bounciness = val;
 			} else if (property.equals("calc_treshold")) {
-				ROTATION_CALC_TRESHOLD = val;
+				ROTATION_CALC_THRESHOLD = val;
 			}
 		}
 	}
