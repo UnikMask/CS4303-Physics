@@ -1,5 +1,7 @@
 package tankphysics.engine;
 
+import java.util.List;
+
 import processing.core.PVector;
 
 /**
@@ -8,7 +10,7 @@ import processing.core.PVector;
  */
 public class CollisionDetails {
 	PVector normal;
-	PVector affectPoint;
+	List<PVector> affectPoints;
 	float penetration;
 	PhysicalObject objA;
 	PhysicalObject objB;
@@ -22,13 +24,13 @@ public class CollisionDetails {
 	}
 
 	public CollisionDetails(float dist, PhysicalObject objA, PhysicalObject objB, CollisionMesh meshA,
-			CollisionMesh meshB, PVector normal, PVector affectPoint) {
+			CollisionMesh meshB, PVector normal, List<PVector> affectPoints) {
 		this.penetration = dist;
 		this.objA = objA;
 		this.objB = objB;
 		this.meshA = meshA;
 		this.meshB = meshB;
 		this.normal = normal;
-		this.affectPoint = affectPoint;
+		this.affectPoints = affectPoints;
 	}
 }

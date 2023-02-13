@@ -176,7 +176,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 				i -= 1;
 			} else if (dist > ret.penetration) {
 				ret.penetration = dist;
-				ret.affectPoint = support;
+				ret.affectPoints = Arrays.asList(support);
 				ret.normal = planeNormal;
 
 				if (ret.penetration > 0.0f) {
@@ -220,7 +220,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 					- sphere.radius - mesh.radius;
 		}
 		PVector normal = PVector.sub(affectPoint, sphere.anchor);
-		return new CollisionDetails(minDist, objA, objB, sphere, mesh, normal, affectPoint);
+		return new CollisionDetails(minDist, objA, objB, sphere, mesh, normal, Arrays.asList(affectPoint));
 	}
 
 	/**
