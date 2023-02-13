@@ -1,7 +1,6 @@
 package tankphysics.engine;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -17,6 +16,7 @@ public class Director {
 	private PApplet sketch;
 	private HashSet<GameObject> world = new HashSet<>();
 	private float targetSecondsPerFrame = 1f / 144;
+	private static final int COLLISION_CHECK_PER_FRAME_LIMIT = 20;
 
 	// Visuals
 	private GameObject camera;
@@ -123,14 +123,15 @@ public class Director {
 				if (c instanceof VisualModel && visuals.contains(c)) {
 					visuals.remove(c);
 				}
-				if (c instanceof PhysicalObject && (bodies.containsKey(c) || colliders.contains(c))) {
+				if (c instanceof PhysicalObject
+						&& (bodies.containsKey((PhysicalObject) c) || colliders.contains((PhysicalObject) c))) {
 					PhysicalObject cPhys = (PhysicalObject) c;
 					if (c instanceof RigidBody) {
 						bodies.remove(c);
-					} else if (c instanceof CollisionMesh) {
-						colliders.remove(c);
+					} else {
+						colliders.remove(cPhys);
 					}
-					HashSet<Pair> objPairs = objectMap.get(c);
+					HashSet<Pair> objPairs = objectMap.get(cPhys);
 					Iterator<Pair> setIterator = activePairs.iterator();
 					while (setIterator.hasNext()) {
 						Pair next = setIterator.next();
@@ -142,7 +143,7 @@ public class Director {
 						PhysicalObject rm = next.obj1 == c ? next.obj2 : next.obj1;
 						objectMap.get(rm).remove(next);
 					}
-					objectMap.remove(c);
+					objectMap.remove(cPhys);
 				}
 			}
 			for (GameObject o : obj.getChildren()) {
@@ -239,17 +240,27 @@ public class Director {
 
 		// Apply collision check for inert mesh to rigid body
 		ArrayDeque<Pair> queue = new ArrayDeque<>(activePairs);
+		HashMap<Pair, Integer> donePairs = new HashMap<>();
 		while (!queue.isEmpty()) {
 			Pair next = queue.pop();
+			if (donePairs.containsKey(next)) {
+				if (donePairs.get(next) >= COLLISION_CHECK_PER_FRAME_LIMIT) {
+					continue;
+				}
+				donePairs.replace(next, donePairs.get(next) + 1);
+			} else {
+				donePairs.put(next, 1);
+			}
+
 			if (PhysicalObject.requiresCollisionCheck(next.obj1, next.obj2)) {
 				boolean collided = PhysicalObject.applyCollisionAndBounce(next.obj1, next.obj2);
 
 				// Add previous object linked pairs to queue for collision recalculation.
 				if (collided) {
-					// HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
-					// nextElements.addAll(objectMap.get(next.obj1));
-					// nextElements.remove(next);
-					// queue.addAll(nextElements);
+					HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
+					nextElements.addAll(objectMap.get(next.obj1));
+					nextElements.remove(next);
+					queue.addAll(nextElements);
 
 					// Call on hit events on both GameObjects.
 					for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
