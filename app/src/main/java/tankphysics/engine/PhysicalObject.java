@@ -1,5 +1,8 @@
 package tankphysics.engine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import processing.core.PVector;
 
 /**
@@ -58,26 +61,27 @@ public interface PhysicalObject {
 	 * @return The collision details between both objects, or null if those are not
 	 *         colliding.
 	 */
-	public static CollisionDetails getCollisionDetails(PhysicalObject objA, PhysicalObject objB) {
+	public static List<CollisionDetails> getCollisionDetails(PhysicalObject objA, PhysicalObject objB) {
+		List<CollisionDetails> ret = new ArrayList<>();
 		for (CollisionMesh vA : objA.getMeshes()) {
 			for (CollisionMesh vB : objB.getMeshes()) {
-				CollisionDetails collideAtoB = CollisionMesh.queryFaceDist(vA, vB, objA, objB);
-				if (collideAtoB == null) {
+				CollisionDetails currentAtoB = CollisionMesh.queryFaceDist(vA, vB, objA, objB);
+				if (currentAtoB == null) {
 					continue;
 				}
 
-				CollisionDetails collideBtoA = CollisionMesh.queryFaceDist(vB, vA, objB, objA);
-				if (collideBtoA == null) {
+				CollisionDetails currentBtoA = CollisionMesh.queryFaceDist(vB, vA, objB, objA);
+				if (currentBtoA == null) {
 					continue;
-				} else if (collideBtoA.penetration > collideAtoB.penetration + SAME_EDGE_THRESHOLD) {
-					return collideBtoA;
-				} else if (Math.abs(collideBtoA.penetration - collideAtoB.penetration) < SAME_EDGE_THRESHOLD) {
-					collideAtoB.affectPoints.addAll(collideBtoA.affectPoints);
+				} else if (currentBtoA.penetration > currentAtoB.penetration + SAME_EDGE_THRESHOLD) {
+					ret.add(currentBtoA);
+				} else if (Math.abs(currentBtoA.penetration - currentAtoB.penetration) < SAME_EDGE_THRESHOLD) {
+					currentAtoB.affectPoints.addAll(currentBtoA.affectPoints);
 				}
-				return collideAtoB;
+				ret.add(currentAtoB);
 			}
 		}
-		return null;
+		return ret;
 	}
 
 	/**
@@ -137,10 +141,10 @@ public interface PhysicalObject {
 			objB.applyImpulse(frictionImpulse, radiusB);
 		}
 
-		return applySinkingCorrection(details);
+		return -details.penetration > CORRECTION_THRESHOLD;
 	}
 
-	public static boolean applySinkingCorrection(CollisionDetails details) {
+	public static void applySinkingCorrection(CollisionDetails details) {
 		PhysicalObject objA = details.objA;
 		PhysicalObject objB = details.objB;
 
@@ -152,17 +156,22 @@ public interface PhysicalObject {
 			objB.setPosition(PVector.sub(objB.getPosition(), PVector.mult(details.normal,
 					details.penetration * CORRECTION_PERCENTAGE * objB.getInverseMass() * inverseTotalMass)));
 		}
-		return -details.penetration > CORRECTION_THRESHOLD;
 	}
 
 	public static boolean applyCollisionAndBounce(PhysicalObject objA, PhysicalObject objB) {
 		// If there is collision - move object and return kinetic force
-		CollisionDetails details = PhysicalObject.getCollisionDetails(objA, objB);
+		List<CollisionDetails> detailsList = PhysicalObject.getCollisionDetails(objA, objB);
 
-		if (details != null) {
-			return PhysicalObject.applyImpulseResolution(details);
+		boolean collided = false;
+		for (CollisionDetails details : detailsList) {
+			collided = collided | PhysicalObject.applyImpulseResolution(details);
 		}
-		return false;
+		// Apply correction on first detail only as all collisions details here share
+		// the same parent objects.
+		if (collided) {
+			applySinkingCorrection(detailsList.get(0));
+		}
+		return collided;
 	}
 
 	/**

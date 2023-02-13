@@ -36,8 +36,7 @@ public class Director {
 
 	// Director's event listener list
 	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
-			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("keyPressed", new HashSet<>()),
-					Map.entry("keyReleased", new HashSet<>())));
+			Map.ofEntries(Map.entry("update", new HashSet<>())));
 	private HashMap<EventListener, String> listenerToId = new HashMap<>();
 
 	// Class representing a pair of physical objects interacting together in
@@ -301,28 +300,6 @@ public class Director {
 		listeners.get(listenerToId.get(listener)).remove(listener);
 		listenerToId.remove(listener);
 		return true;
-	}
-
-	/**
-	 * Call key pressed events on receiving a key.
-	 *
-	 * @param key The last key pressed.
-	 */
-	public void keyPressed(String key) {
-		for (EventListener l : listeners.get("keyPressed")) {
-			l.call(null, key);
-		}
-	}
-
-	/**
-	 * Call key released events on releasing a key.
-	 *
-	 * @param key The last key released.
-	 */
-	public void keyReleased(String key) {
-		for (EventListener l : listeners.get("keyReleased")) {
-			l.call(null, key);
-		}
 	}
 
 	//////////////////
