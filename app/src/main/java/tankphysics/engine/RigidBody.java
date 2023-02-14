@@ -148,12 +148,14 @@ public class RigidBody implements Component, PhysicalObject {
 	private void calculateAndStoreInertia() {
 		float inertia = 0;
 		for (CollisionMesh m : hitbox) {
-			for (PVector v : m.getVertices()) {
-				inertia += (float) Math.pow(PVector.sub(v, anchor).mag(), 2)
-						* (getMass() / (hitbox.size() * m.getNumVertices()));
+			if (m.getMeshType() == CollisionMesh.MeshType.POLYGON) {
+				for (PVector v : m.getVertices()) {
+					inertia += (float) Math.pow(PVector.sub(v, anchor).mag(), 2)
+							* (getMass() / (hitbox.size() * m.getNumVertices()));
+				}
 			}
 		}
-		inverseInertia = 1 / inertia;
+		inverseInertia = inertia != 0 ? 1 / inertia : 0;
 	}
 
 	/**

@@ -70,13 +70,17 @@ public interface PhysicalObject {
 					continue;
 				}
 
-				CollisionDetails currentBtoA = CollisionMesh.queryFaceDist(vB, vA, objB, objA);
-				if (currentBtoA == null) {
-					continue;
-				} else if (currentBtoA.penetration > currentAtoB.penetration + SAME_EDGE_THRESHOLD) {
-					ret.add(currentBtoA);
-				} else if (Math.abs(currentBtoA.penetration - currentAtoB.penetration) < SAME_EDGE_THRESHOLD) {
-					currentAtoB.affectPoints.addAll(currentBtoA.affectPoints);
+				// Call other side if no mesh is a particle.
+				if (vA.getMeshType() != CollisionMesh.MeshType.PARTICLE
+						&& vB.getMeshType() != CollisionMesh.MeshType.PARTICLE) {
+					CollisionDetails currentBtoA = CollisionMesh.queryFaceDist(vB, vA, objB, objA);
+					if (currentBtoA == null) {
+						continue;
+					} else if (currentBtoA.penetration > currentAtoB.penetration + SAME_EDGE_THRESHOLD) {
+						ret.add(currentBtoA);
+					} else if (Math.abs(currentBtoA.penetration - currentAtoB.penetration) < SAME_EDGE_THRESHOLD) {
+						currentAtoB.affectPoints.addAll(currentBtoA.affectPoints);
+					}
 				}
 				ret.add(currentAtoB);
 			}

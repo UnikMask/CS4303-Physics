@@ -19,6 +19,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private List<PVector> vertices;
 	private List<PVector> storageVertices;
 	private float radius;
+	private final static PVector PARTICLE_SIZE = new PVector(0.01f, 0.01f);
 
 	private PVector size;
 	private PVector anchor;
@@ -33,8 +34,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private float ROTATION_CALC_THRESHOLD = 0.01f;
 	private float savedAngle;
 
-	private static enum MeshType {
-		CIRCLE, POLYGON
+	static enum MeshType {
+		CIRCLE, POLYGON, PARTICLE
 	}
 
 	/////////////////////////
@@ -44,6 +45,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 	public void attach(GameObject obj) {
 		object = obj;
 		this.size = obj.getSize();
+	}
+
+	public MeshType getMeshType() {
+		return meshType;
 	}
 
 	public PVector getSize() {
@@ -155,7 +160,14 @@ public class CollisionMesh implements Component, PhysicalObject {
 			PhysicalObject objB) {
 		if (polygonA.meshType == MeshType.CIRCLE) {
 			return circleQueryFaceDist(polygonA, polygonB, objA, objB);
+		} else if (polygonA.meshType == MeshType.PARTICLE) {
+			if (polygonB.meshType == MeshType.PARTICLE) {
+				return null;
+			} else {
+				return queryFaceDist(polygonB, polygonA, objB, objA);
+			}
 		}
+
 		// Get distance to polygon - Apply SAT.
 		CollisionDetails ret = new CollisionDetails(-Float.MAX_VALUE, objA, objB, polygonA, polygonB, null,
 				new ArrayList<>());
@@ -194,50 +206,6 @@ public class CollisionMesh implements Component, PhysicalObject {
 			}
 		}
 		ret.affectPoints = cleanFromVoronoiRegions(ret.affectPoints, p1, p2, objB.getPosition());
-		return ret;
-	}
-
-
-	/**
-	 * Query face distances with a particle as second object.
-	 * 
-	 * @param obj The object that owns the CollisionMesh components.
-	 * @param polygon The polygon to check for collisions against the particle.
-	 * @param particle The particle object to check for collisions against.
-	 * 
-	 * @return The collision details between the particle and the object, if any exist.
-	 */
-	public static CollisionDetails particleQueryFaceDist(PhysicalObject obj, CollisionMesh polygon, Particle particle) {
-		if (polygon.meshType == MeshType.CIRCLE) {
-			PVector dir = PVector.sub(polygon.getPosition(), particle.getPosition());
-			if (dir.mag() <= polygon.radius) {
-				PVector normal = dir.copy().normalize();
-				return new CollisionDetails(-dir.mag(), obj, particle, polygon, null, normal, Arrays.asList(particle.getPosition()));
-			}
-		}
-
-		CollisionDetails ret = new CollisionDetails(-Float.MAX_VALUE, obj, particle, polygon, null, null, Arrays.asList(particle.getPosition()));
-		float reverseFactor = 1.0f;
-		for (int i = 0; i < polygon.vertices.size(); i++) {
-			PVector vertex1 = PVector.add(polygon.getPosition(), polygon.vertices.get(i));
-			PVector vertex2 = PVector.add(polygon.getPosition(), polygon.vertices.get((i + 1) % polygon.vertices.size()));
-
-			PVector planeNormal = new PVector(PVector.sub(vertex2, vertex1).y, -PVector.sub(vertex2, vertex1).x)
-					.mult(reverseFactor).normalize();
-			float dist = PVector.dot(PVector.sub(particle.getPosition(), vertex1), planeNormal);
-
-			if (i == 0 && dist > 0.0f) {
-				reverseFactor = -1.0f;
-				i -= 1;
-			} else if (dist > ret.penetration) {
-				ret.penetration = dist;
-				ret.normal = planeNormal;
-
-				if (ret.penetration > 0.0f) {
-					return null;
-				}
-			}
-		}
 		return ret;
 	}
 
@@ -312,8 +280,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 				}
 			}
 			return maxes;
+		} else if (meshType == MeshType.CIRCLE) {
+			return new ArrayList<>(Arrays.asList(PVector.mult(PVector.fromAngle(direction.heading()), radius)));
 		} else {
-			return Arrays.asList(PVector.mult(PVector.fromAngle(direction.heading()), radius));
+			return new ArrayList<>(Arrays.asList(this.getPosition()));
 		}
 	}
 
@@ -345,10 +315,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	/**
 	 * Constructor for a polygon-type CollisionMesh object.
 	 *
-	 * @param anchor    The anchor for the mesh's rotations.
-	 * @param vertices  The mesh's vertices defining the edge of the mesh/polygon.
-	 * @param roughness How rough the terrain is - i.e. How much force is required
-	 *                  for the object to move without inertia.
+	 * @param anchor     The anchor for the mesh's rotations.
+	 * @param vertices   The mesh's vertices defining the edge of the mesh/polygon.
+	 * @param properties The surface properties of the mesh.
 	 */
 	public CollisionMesh(PVector anchor, List<PVector> vertices, Map<String, Float> properties) {
 		this.savedAnchor = anchor.copy();
@@ -362,10 +331,9 @@ public class CollisionMesh implements Component, PhysicalObject {
 	/**
 	 * Constructor for a circle-type CollisionMesh object.
 	 *
-	 * @param size     The mesh's bounds. Recalculated with object rotation.
-	 * @param vertices The mesh's vertices defining the edge of the mesh/polygon.
-	 * @param friction How rough the terrain is - i.e. How much force is required
-	 *                 for the object to move without inertia.
+	 * @param anchor     The anchor for the collision mesh's rotations.
+	 * @param vertices   The mesh's vertices defining the edge of the mesh/polygon.
+	 * @param properties The surface proerties of the mesh.
 	 */
 	public CollisionMesh(PVector anchor, float radius, Map<String, Float> properties) {
 		this.savedAnchor = anchor.copy();
@@ -374,5 +342,17 @@ public class CollisionMesh implements Component, PhysicalObject {
 		this.radius = radius;
 		this.size = new PVector(radius * 2, radius * 2);
 		setProperties(properties);
+	}
+
+	/**
+	 * Constructor for a particle-type CollisionMesh object.
+	 *
+	 * @param properties The surface properties of the mesh.
+	 */
+	public CollisionMesh(Map<String, Float> properties) {
+		this.savedAnchor = new PVector();
+		this.anchor = new PVector();
+		this.meshType = MeshType.PARTICLE;
+		this.size = PARTICLE_SIZE.copy();
 	}
 }
