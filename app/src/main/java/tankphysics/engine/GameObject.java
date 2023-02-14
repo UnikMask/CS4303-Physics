@@ -132,7 +132,7 @@ public class GameObject {
 	 * @return Whether the listener was successfully attached or not.
 	 */
 	public boolean attachEventListener(String id, EventListener listener) {
-		if (listeners.containsKey(id) || listenerToId.containsKey(listener)) {
+		if (!listeners.containsKey(id) || listenerToId.containsKey(listener)) {
 			return false;
 		}
 		listeners.get(id).add(listener);
