@@ -20,6 +20,7 @@ public class Tank extends GameObject {
 	private static final List<PVector> hull = Polygons.makeRegularPolygon(new PVector(1, 1), 16, 0,
 			new PVector(0, -0.625f));
 	private static final float TANK_MASS = 800;
+	private static final float MAX_STRENGTH = 100;
 
 	// GameObject bomponents
 	private CollisionMesh bellyMesh = new CollisionMesh(new PVector(), belly, null);
@@ -72,6 +73,11 @@ public class Tank extends GameObject {
 	public void drive(boolean left) {
 		tankBody.setVelocity(PVector.add(tankBody.getVelocity(),
 				Polygons.getRotatedVector(new PVector(left ? 0.1f : -0.1f, 0), rotation)));
+	}
+
+	public Bullet spawnProjectile(float intensity) {
+		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
+				nozzle.extraAngle, Math.min(100, MAX_STRENGTH));
 	}
 
 	//////////////////
