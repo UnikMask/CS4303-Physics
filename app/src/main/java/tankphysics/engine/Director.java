@@ -337,8 +337,8 @@ public class Director {
 	 * Constructor for a director object.
 	 */
 	public Director(PApplet sketch) {
-		camera = new GameObject(new PVector(sketch.displayWidth, sketch.displayHeight),
-				new PVector(sketch.displayWidth / 2, sketch.displayHeight / 2));
+		float scale = (float) sketch.displayHeight / (float) sketch.displayWidth;
+		camera = new GameObject(new PVector(20, 20 * scale), new PVector());
 		attach(camera);
 		this.sketch = sketch;
 	}
