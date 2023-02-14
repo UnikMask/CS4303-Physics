@@ -115,6 +115,6 @@ public class Game extends PApplet {
 	}
 
 	public static void main(String[] args) {
-		PApplet.main(new String[] { "tankphysics.Game" });
+		PApplet.main(new String[] { "tankphysics.TestEnvironment" });
 	}
 }
