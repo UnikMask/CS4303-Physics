@@ -197,6 +197,50 @@ public class CollisionMesh implements Component, PhysicalObject {
 		return ret;
 	}
 
+
+	/**
+	 * Query face distances with a particle as second object.
+	 * 
+	 * @param obj The object that owns the CollisionMesh components.
+	 * @param polygon The polygon to check for collisions against the particle.
+	 * @param particle The particle object to check for collisions against.
+	 * 
+	 * @return The collision details between the particle and the object, if any exist.
+	 */
+	public static CollisionDetails particleQueryFaceDist(PhysicalObject obj, CollisionMesh polygon, Particle particle) {
+		if (polygon.meshType == MeshType.CIRCLE) {
+			PVector dir = PVector.sub(polygon.getPosition(), particle.getPosition());
+			if (dir.mag() <= polygon.radius) {
+				PVector normal = dir.copy().normalize();
+				return new CollisionDetails(-dir.mag(), obj, particle, polygon, null, normal, Arrays.asList(particle.getPosition()));
+			}
+		}
+
+		CollisionDetails ret = new CollisionDetails(-Float.MAX_VALUE, obj, particle, polygon, null, null, Arrays.asList(particle.getPosition()));
+		float reverseFactor = 1.0f;
+		for (int i = 0; i < polygon.vertices.size(); i++) {
+			PVector vertex1 = PVector.add(polygon.getPosition(), polygon.vertices.get(i));
+			PVector vertex2 = PVector.add(polygon.getPosition(), polygon.vertices.get((i + 1) % polygon.vertices.size()));
+
+			PVector planeNormal = new PVector(PVector.sub(vertex2, vertex1).y, -PVector.sub(vertex2, vertex1).x)
+					.mult(reverseFactor).normalize();
+			float dist = PVector.dot(PVector.sub(particle.getPosition(), vertex1), planeNormal);
+
+			if (i == 0 && dist > 0.0f) {
+				reverseFactor = -1.0f;
+				i -= 1;
+			} else if (dist > ret.penetration) {
+				ret.penetration = dist;
+				ret.normal = planeNormal;
+
+				if (ret.penetration > 0.0f) {
+					return null;
+				}
+			}
+		}
+		return ret;
+	}
+
 	// Remove points from the list that are not on the edge Voronoi region of the
 	// segment.
 	private static List<PVector> cleanFromVoronoiRegions(List<PVector> points, PVector p1, PVector p2,
