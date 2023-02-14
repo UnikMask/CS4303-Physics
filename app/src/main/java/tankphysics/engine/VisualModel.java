@@ -25,8 +25,8 @@ public abstract class VisualModel implements Component {
 	 */
 	public void draw(GameObject camera, PApplet sketch) {
 		sketch.pushMatrix();
-		PVector scale = new PVector(((float) sketch.displayWidth) / camera.getSize().x,
-				((float) sketch.displayHeight) / camera.getSize().y);
+		PVector scale = new PVector(((float) sketch.width) / camera.getSize().x,
+				((float) sketch.height) / camera.getSize().y);
 		PVector anchoredPos = PVector.sub(camera.getPosition(), PVector.div(camera.getSize(), 2));
 		sketch.scale(scale.x, scale.y);
 		sketch.translate(-anchoredPos.x, -anchoredPos.y);

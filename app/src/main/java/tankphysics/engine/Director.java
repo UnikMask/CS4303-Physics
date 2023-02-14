@@ -165,7 +165,7 @@ public class Director {
 			for (Component c : object.getComponents()) {
 				if (c instanceof VisualModel) {
 					visuals.add((VisualModel) c);
-				} else if (c instanceof RigidBody || c instanceof CollisionMesh) {
+				} else if (c instanceof PhysicalObject) {
 					PhysicalObject cPhys = (PhysicalObject) c;
 					objectMap.put(cPhys, new HashSet<>());
 
@@ -176,9 +176,7 @@ public class Director {
 						objectMap.get(cPhys).add(newPair);
 						objectMap.get(b).add(newPair);
 					}
-					if (c instanceof CollisionMesh) {
-						colliders.add(cPhys);
-					} else {
+					if (c instanceof RigidBody) {
 						// Add all collision mesh interactions to list of pairs.
 						for (PhysicalObject mesh : colliders) {
 							Pair newPair = new Pair(cPhys, mesh);
@@ -187,6 +185,8 @@ public class Director {
 							objectMap.get(mesh).add(newPair);
 						}
 						bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+					} else {
+						colliders.add(cPhys);
 					}
 				}
 			}
@@ -280,8 +280,8 @@ public class Director {
 
 	public PVector getSetVector(PVector originalVector) {
 		PMatrix2D mat = new PMatrix2D();
-		PVector scale = new PVector(((float) sketch.displayWidth) / camera.getSize().x,
-				((float) sketch.displayHeight) / camera.getSize().y);
+		PVector scale = new PVector(((float) sketch.width) / camera.getSize().x,
+				((float) sketch.height) / camera.getSize().y);
 		PVector anchoredPos = PVector.sub(camera.getPosition(), PVector.div(camera.getSize(), 2));
 		mat.scale(scale.x, scale.y);
 		mat.translate(-anchoredPos.x, -anchoredPos.y);
@@ -337,7 +337,7 @@ public class Director {
 	 * Constructor for a director object.
 	 */
 	public Director(PApplet sketch) {
-		float scale = (float) sketch.displayHeight / (float) sketch.displayWidth;
+		float scale = (float) sketch.height / (float) sketch.width;
 		camera = new GameObject(new PVector(20, 20 * scale), new PVector());
 		attach(camera);
 		this.sketch = sketch;
