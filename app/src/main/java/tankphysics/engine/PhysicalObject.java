@@ -12,6 +12,9 @@ public interface PhysicalObject {
 	public static final float CORRECTION_THRESHOLD = 0.01f;
 	public static final float CORRECTION_PERCENTAGE = 0.4f;
 	public static final float SAME_EDGE_THRESHOLD = 0.01f;
+	public static final float ROTATIONAL_VELOCITY_THRESHOLD = 0.01f;
+
+	public static final float INERTIA_THRESHOLD = 0.05f;
 
 	///////////////////////
 	// Interface Methods //
@@ -45,7 +48,7 @@ public interface PhysicalObject {
 
 	public Iterable<CollisionMesh> getMeshes();
 
-	public void applyImpulse(PVector impulse, PVector affectPt);
+	public void applyImpulse(PVector impulse, PVector affectPt, boolean checkRotationalVelocity);
 
 	////////////////////
 	// Static Methods //
@@ -88,6 +91,30 @@ public interface PhysicalObject {
 		return ret;
 	}
 
+	public static boolean requiresRotationalVelocity(CollisionDetails details) {
+		PhysicalObject objA = details.objA;
+		PhysicalObject objB = details.objB;
+
+		float totalInertiaA = 0;
+		float totalInertiaB = 0;
+		for (PVector affectPoint : details.affectPoints) {
+
+			// Get radius of the affected point on A and B
+			PVector radiusA = PVector.sub(affectPoint, objA.getCOM()).sub(objA.getPosition());
+			PVector radiusB = PVector.sub(affectPoint, objB.getCOM()).sub(objB.getPosition());
+
+			// Check if objects are moving into each other from the normal's point of view.
+			float radACrossNormal = (float) Math.pow(radiusA.cross(details.normal).z, 2);
+			float radBCrossNormal = (float) Math.pow(radiusB.cross(details.normal).z, 2);
+
+			totalInertiaA += radACrossNormal * objA.getInverseInertia();
+			totalInertiaB += radBCrossNormal * objB.getInverseInertia();
+		}
+		return Math.abs(totalInertiaA) > INERTIA_THRESHOLD || Math.abs(totalInertiaB) > INERTIA_THRESHOLD
+				|| Math.abs(objA.getRotationalVelocity()) > ROTATIONAL_VELOCITY_THRESHOLD
+				|| Math.abs(objB.getRotationalVelocity()) > ROTATIONAL_VELOCITY_THRESHOLD;
+	}
+
 	/**
 	 * Apply impulse resolution from collision details given.
 	 *
@@ -98,6 +125,8 @@ public interface PhysicalObject {
 		PhysicalObject objA = details.objA;
 		PhysicalObject objB = details.objB;
 
+		boolean checkRotationalVelocity = requiresRotationalVelocity(details);
+
 		for (PVector affectPoint : details.affectPoints) {
 
 			// Get radius of the affected point on A and B
@@ -105,9 +134,13 @@ public interface PhysicalObject {
 			PVector radiusB = PVector.sub(affectPoint, objB.getCOM()).sub(objB.getPosition());
 
 			// Check if objects are moving into each other from the normal's point of view.
-			PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity())
-					.sub(new PVector(-radiusA.y, radiusA.x).mult(objA.getRotationalVelocity()))
-					.add(new PVector(-radiusB.y, radiusB.x).mult(objB.getRotationalVelocity()));
+			PVector relativeVelocity = PVector.sub(objB.getVelocity(), objA.getVelocity());
+
+			if (checkRotationalVelocity) {
+				relativeVelocity = relativeVelocity
+						.sub(new PVector(-radiusA.y, radiusA.x).mult(objA.getRotationalVelocity()))
+						.add(new PVector(-radiusB.y, radiusB.x).mult(objB.getRotationalVelocity()));
+			}
 			float velocityProjectionOnNormal = PVector.dot(relativeVelocity, details.normal);
 			if (velocityProjectionOnNormal > 0) {
 				return false;
@@ -117,14 +150,18 @@ public interface PhysicalObject {
 			float totalBounce = details.meshA.getBounciness() * details.meshB.getBounciness();
 			float radACrossNormal = (float) Math.pow(radiusA.cross(details.normal).z, 2);
 			float radBCrossNormal = (float) Math.pow(radiusB.cross(details.normal).z, 2);
-			float factorDiv = objA.getInverseMass() + objB.getInverseMass() + radACrossNormal * objA.getInverseInertia()
-					+ radBCrossNormal * objB.getInverseInertia();
+			float factorDiv = objA.getInverseMass() + objB.getInverseMass();
+
+			if (checkRotationalVelocity) {
+				factorDiv += (radACrossNormal * objA.getInverseInertia() + radBCrossNormal * objB.getInverseInertia());
+			}
+
 			factorDiv *= details.affectPoints.size();
 			float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal / factorDiv;
 			PVector impulse = PVector.mult(details.normal, impulseFactor);
 
-			objA.applyImpulse(PVector.mult(impulse, -1), radiusA);
-			objB.applyImpulse(impulse, radiusB);
+			objA.applyImpulse(PVector.mult(impulse, -1), radiusA, checkRotationalVelocity);
+			objB.applyImpulse(impulse, radiusB, checkRotationalVelocity);
 
 			// Calculate tangent for friction
 			PVector tan = PVector
@@ -141,8 +178,8 @@ public interface PhysicalObject {
 			if (Math.abs(frictionFactor) > staticFactor * impulseFactor) {
 				frictionImpulse = PVector.mult(tan, -impulseFactor * dynamicFactor);
 			}
-			objA.applyImpulse(PVector.mult(frictionImpulse, -1), radiusA);
-			objB.applyImpulse(frictionImpulse, radiusB);
+			objA.applyImpulse(PVector.mult(frictionImpulse, -1), radiusA, checkRotationalVelocity);
+			objB.applyImpulse(frictionImpulse, radiusB, checkRotationalVelocity);
 		}
 
 		return -details.penetration > CORRECTION_THRESHOLD;

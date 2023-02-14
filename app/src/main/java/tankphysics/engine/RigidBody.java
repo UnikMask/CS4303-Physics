@@ -123,9 +123,11 @@ public class RigidBody implements Component, PhysicalObject {
 	// RigidBody Component Methods //
 	/////////////////////////////////
 
-	public void applyImpulse(PVector impulse, PVector contactPt) {
+	public void applyImpulse(PVector impulse, PVector contactPt, boolean checkRotationalVelocity) {
 		velocity = PVector.add(velocity, PVector.mult(impulse, getInverseMass()));
-		rotationalVelocity += inverseInertia * contactPt.cross(impulse).z;
+		if (checkRotationalVelocity) {
+			rotationalVelocity += inverseInertia * contactPt.cross(impulse).z;
+		}
 	}
 
 	/**

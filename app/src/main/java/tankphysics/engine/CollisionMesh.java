@@ -136,7 +136,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 		return anchor;
 	}
 
-	public void applyImpulse(PVector impulse, PVector contactPt) {
+	public void applyImpulse(PVector impulse, PVector contactPt, boolean checkRotationalVelocity) {
 		return;
 	}
 
