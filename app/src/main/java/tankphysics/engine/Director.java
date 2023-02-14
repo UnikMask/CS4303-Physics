@@ -1,6 +1,7 @@
 package tankphysics.engine;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -39,6 +40,7 @@ public class Director {
 	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
 			Map.ofEntries(Map.entry("update", new HashSet<>())));
 	private HashMap<EventListener, String> listenerToId = new HashMap<>();
+	private ArrayList<EventListener> listenersSetForDestruction = new ArrayList<>();
 
 	// Class representing a pair of physical objects interacting together in
 	// collisions.
@@ -125,6 +127,11 @@ public class Director {
 			}
 			for (GameObject o : obj.getChildren()) {
 				disattach(o);
+			}
+			for (EventListener l : obj.listenerToId.keySet()) {
+				if (listenerToId.containsKey(l)) {
+					listenersSetForDestruction.add(l);
+				}
 			}
 		}
 	}
@@ -223,12 +230,6 @@ public class Director {
 
 		// Update loop
 		while (!pause && deltaT > targetSecondsPerFrame) {
-			for (GameObject o : world) {
-				for (EventListener l : o.getListeners("update")) {
-					l.call(null);
-				}
-				o.update();
-			}
 			for (EventListener l : listeners.get("update")) {
 				l.call(null);
 			}
@@ -237,6 +238,14 @@ public class Director {
 		}
 		// Draw the image after all updates have been made.
 		draw();
+	}
+
+	public void cleanListeners() {
+		if (!listenersSetForDestruction.isEmpty())
+			for (EventListener l : listenersSetForDestruction) {
+				listeners.get(listenerToId.get(l)).remove(l);
+				listenerToId.remove(l);
+			}
 	}
 
 	/**
@@ -253,6 +262,8 @@ public class Director {
 	 * Update the engine logic.
 	 */
 	public void update() {
+		cleanListeners();
+
 		// Apply forces to rigid bodies
 		for (RigidBody b : bodies.keySet()) {
 			b.apply(bodies.get(b).stream(), targetSecondsPerFrame);
@@ -345,8 +356,7 @@ public class Director {
 		if (!listenerToId.containsKey(listener)) {
 			return false;
 		}
-		listeners.get(listenerToId.get(listener)).remove(listener);
-		listenerToId.remove(listener);
+		listenersSetForDestruction.add(listener);
 		return true;
 	}
 

@@ -15,6 +15,7 @@ import processing.core.PVector;
  * Class representing a tank in the tankphysics game.
  */
 public class Tank extends GameObject {
+	// Tank constants
 	private static final List<PVector> belly = Arrays.asList(new PVector(-0.75f, -0.5f), new PVector(0.75f, -0.5f),
 			new PVector(0.5f, 0.5f), new PVector(-0.5f, 0.5f));
 	private static final List<PVector> hull = Polygons.makeRegularPolygon(new PVector(1, 1), 16, 0,
@@ -26,6 +27,7 @@ public class Tank extends GameObject {
 	private CollisionMesh bellyMesh = new CollisionMesh(new PVector(), belly, null);
 	private RigidBody tankBody = new RigidBody(TANK_MASS, bellyMesh, new CollisionMesh(new PVector(), hull, null));
 	private Nozzle nozzle;
+	private float intensity;
 
 	// Class that represents the nozzle of the tank.
 	class Nozzle extends GameObject {
@@ -54,12 +56,42 @@ public class Tank extends GameObject {
 		}
 	}
 
+	// Tank states
+	enum TankState {
+		MOVING, SHOOTING, IDLE
+	}
+
+	private TankState state = TankState.IDLE;
+
+	/////////////////////////
+	// Getters and Setters //
+	/////////////////////////
+
 	public RigidBody getRigidBody() {
 		return tankBody;
 	}
 
 	public Nozzle getNozzle() {
 		return nozzle;
+	}
+
+	public TankState getState() {
+		return state;
+	}
+
+	public void setState(TankState state) {
+		this.state = state;
+	}
+
+	////////////////////
+	// Tank Actions //
+	////////////////////
+
+	public void drive(boolean left) {
+		if (state == TankState.MOVING) {
+			tankBody.setVelocity(PVector.add(tankBody.getVelocity(),
+					Polygons.getRotatedVector(new PVector(left ? 0.1f : -0.1f, 0), rotation)));
+		}
 	}
 
 	public void setMovingFriction() {
@@ -70,14 +102,20 @@ public class Tank extends GameObject {
 		bellyMesh.setProperties(Map.ofEntries(Map.entry("dynamicFriction", 1f)));
 	}
 
-	public void drive(boolean left) {
-		tankBody.setVelocity(PVector.add(tankBody.getVelocity(),
-				Polygons.getRotatedVector(new PVector(left ? 0.1f : -0.1f, 0), rotation)));
+	public void setAimOptions(PVector mouseDist) {
+		if (state == TankState.MOVING) {
+			nozzle.setExtraAngle(mouseDist.heading());
+			intensity = Math.min(mouseDist.mag() / 5, 100);
+		}
 	}
 
-	public Bullet spawnProjectile(float intensity, Game game) {
-		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
-				nozzle.extraAngle, Math.min(100, MAX_STRENGTH), game);
+	public Bullet spawnProjectile() {
+		if (state == TankState.MOVING) {
+			setState(TankState.SHOOTING);
+			return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
+					nozzle.extraAngle, Math.min(intensity, MAX_STRENGTH));
+		}
+		return null;
 	}
 
 	//////////////////

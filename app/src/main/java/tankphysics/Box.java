@@ -27,7 +27,6 @@ public class Box extends GameObject {
 		return new EventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				if (caller instanceof Bullet) {
-					engineDirector.disattach(caller);
 					engineDirector.disattachComponent(rigidBody);
 					engineDirector.attachEventListener("update", getBoxDestructionListener(engineDirector));
 				}
@@ -43,13 +42,11 @@ public class Box extends GameObject {
 
 				if (numDestructionFrames >= DESTRUCTION_FRAME_COUNT) {
 					engineDirector.disattach(self);
-					engineDirector.disattachEventListener(this);
 				} else {
 					boxLooks.setScale(PVector.lerp(boxLooks.getScale(), DESTRUCTION_FINAL_SIZE, 0.05f));
 					int tint = (boxLooks.getTint() >>> 24);
 					boxLooks.setTint(((int) PApplet.lerp(tint, 0, 0.1f)) << 24 | 0x00FFFFFF);
 				}
-
 			}
 		};
 	}
