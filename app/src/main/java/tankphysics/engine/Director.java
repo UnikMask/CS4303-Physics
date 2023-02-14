@@ -17,7 +17,7 @@ public class Director {
 	private PApplet sketch;
 	private HashSet<GameObject> world = new HashSet<>();
 	private float targetSecondsPerFrame = 1f / 144;
-	private static final int COLLISION_CHECK_PER_FRAME_LIMIT = 20;
+	private static final int COLLISION_CHECK_PER_FRAME_LIMIT = 5;
 
 	// Visuals
 	private GameObject camera;
@@ -196,6 +196,17 @@ public class Director {
 		}
 	}
 
+	public void removeCollisions(PhysicalObject objA, PhysicalObject objB) {
+		if (world.contains(objA.getObject()) && world.contains(objB.getObject())) {
+			Pair currentPair = new Pair(objA, objB);
+			if (activePairs.contains(currentPair)) {
+				activePairs.remove(currentPair);
+				objectMap.get(objA).remove(currentPair);
+				objectMap.get(objB).remove(currentPair);
+			}
+		}
+	}
+
 	/**
 	 * Calculate updates and draw for the next game frame.
 	 */
@@ -245,6 +256,7 @@ public class Director {
 		// Apply collision check for inert mesh to rigid body
 		ArrayDeque<Pair> queue = new ArrayDeque<>(activePairs);
 		HashMap<Pair, Integer> donePairs = new HashMap<>();
+		HashSet<Pair> collidedPairs = new HashSet<>();
 		while (!queue.isEmpty()) {
 			Pair next = queue.pop();
 			if (donePairs.containsKey(next)) {
@@ -262,17 +274,21 @@ public class Director {
 				// Add previous object linked pairs to queue for collision recalculation.
 				if (collided) {
 					HashSet<Pair> nextElements = new HashSet<>(objectMap.get(next.obj1));
-					nextElements.addAll(objectMap.get(next.obj1));
+					nextElements.addAll(objectMap.get(next.obj2));
 					nextElements.remove(next);
 					queue.addAll(nextElements);
-
-					// Call on hit events on both GameObjects.
-					for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
-						l.call(next.obj2.getObject());
-					}
-					for (EventListener l : next.obj2.getObject().getListeners("onHit")) {
-						l.call(next.obj1.getObject());
-					}
+					collidedPairs.add(next);
+				}
+			}
+		}
+		for (Pair next : collidedPairs) {
+			// Call on hit events on both GameObjects.
+			if (world.contains(next.obj1.getObject()) && world.contains(next.obj2.getObject())) {
+				for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
+					l.call(next.obj2.getObject());
+				}
+				for (EventListener l : next.obj2.getObject().getListeners("onHit")) {
+					l.call(next.obj1.getObject());
 				}
 			}
 		}
