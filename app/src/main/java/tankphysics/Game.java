@@ -37,7 +37,7 @@ public class Game extends PApplet {
 		blueTank = new Tank(new PVector(13, -2), color(0, 0, 255));
 		GameObject[] boxGrid = new GameObject[25];
 		for (int i = 0; i < 25; i++) {
-			boxGrid[i] = new Box(new PVector(-6.5f + 3.2f * (i / 5), -2 - 2.1f * (i % 5)), this);
+			boxGrid[i] = new Box(new PVector(-6.5f + 3.2f * (i / 5), -2 - 2.1f * (i % 5)), this, engineDirector);
 		}
 
 		// Attach all components to director.
@@ -97,6 +97,15 @@ public class Game extends PApplet {
 		}
 	}
 
+	public void mouseClicked() {
+		float intensity = Math.min(100,
+				PVector.sub(new PVector(mouseX, mouseY), engineDirector.getSetVector(redTank.getNozzle().getPosition()))
+						.mag() / 2);
+		Bullet bullet = redTank.spawnProjectile(intensity);
+		engineDirector.attach(bullet);
+		engineDirector.removeCollisions(bullet.getRigidBody(), redTank.getRigidBody());
+	}
+
 	public void draw() {
 		background(0);
 
@@ -115,6 +124,6 @@ public class Game extends PApplet {
 	}
 
 	public static void main(String[] args) {
-		PApplet.main(new String[] { "tankphysics.TestEnvironment" });
+		PApplet.main(new String[] { "tankphysics.Game" });
 	}
 }
