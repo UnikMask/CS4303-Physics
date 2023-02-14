@@ -8,6 +8,7 @@ import tankphysics.engine.GameObject;
 import tankphysics.engine.Polygons;
 import tankphysics.engine.RigidBody;
 import tankphysics.engine.VisualPolygon;
+import tankphysics.engine.EventListener;
 
 public class Bullet extends GameObject {
 	private static final float MAX_VELOCITY = 100;
@@ -24,10 +25,19 @@ public class Bullet extends GameObject {
 		DEFAULT, EXPLOSIVE, PENETRATING
 	}
 
-	public Bullet(PVector position, float angle, float intensity) {
+	public EventListener getBulletNextTurnOnHitListener(Game game) {
+		return new EventListener() {
+			public void call(GameObject caller, Object... parameters) {
+				game.nextTurn();
+			}
+		};
+	}
+
+	public Bullet(PVector position, float angle, float intensity, Game game) {
 		super(new PVector(0.2f, 0.2f), position, false, new VisualPolygon(new PVector(), bulletPolygon, 255));
 		attach(bulletBody);
 		bulletBody.applyImpulse(PVector.mult(PVector.fromAngle(angle), (intensity / 100f) * MAX_VELOCITY), position,
 				false);
+		attachEventListener("onHit", getBulletNextTurnOnHitListener(game));
 	}
 }

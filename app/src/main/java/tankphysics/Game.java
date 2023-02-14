@@ -12,6 +12,7 @@ public class Game extends PApplet {
 	GameObject camera;
 	Tank redTank;
 	Tank blueTank;
+	Tank currentTank;
 
 	HashMap<Character, Integer> heldKeys = new HashMap<>();
 
@@ -43,11 +44,16 @@ public class Game extends PApplet {
 		// Attach all components to director.
 		engineDirector.attach(floor, ceiling, redTank, blueTank);
 		engineDirector.attach(boxGrid);
+		currentTank = redTank;
 	}
 
 	public void settings() {
 		size(1920, 1080, PApplet.P2D);
 		fullScreen();
+	}
+
+	public void nextTurn() {
+		currentTank = (currentTank == redTank ? blueTank : redTank);
 	}
 
 	public void keyReleased() {
@@ -60,12 +66,12 @@ public class Game extends PApplet {
 		}
 		if (key == 'd') {
 			if (!heldKeys.containsKey('a')) {
-				redTank.setIdleFriction();
+				currentTank.setIdleFriction();
 			}
 		}
 		if (key == 'a') {
 			if (!heldKeys.containsKey('d')) {
-				redTank.setIdleFriction();
+				currentTank.setIdleFriction();
 			}
 		}
 	}
@@ -74,14 +80,14 @@ public class Game extends PApplet {
 		heldKeys.put(key, 0);
 		if (key == 'd') {
 			if (!heldKeys.containsKey('a')) {
-				redTank.setMovingFriction();
+				currentTank.setMovingFriction();
 			} else {
 				heldKeys.remove('d');
 			}
 		}
 		if (key == 'a') {
 			if (!heldKeys.containsKey('d')) {
-				redTank.setMovingFriction();
+				currentTank.setMovingFriction();
 			} else {
 				heldKeys.remove('a');
 			}
@@ -90,20 +96,20 @@ public class Game extends PApplet {
 
 	public void keyHeld(char key) {
 		if (key == 'd') {
-			redTank.drive(true);
+			currentTank.drive(true);
 		}
 		if (key == 'a') {
-			redTank.drive(false);
+			currentTank.drive(false);
 		}
 	}
 
 	public void mouseClicked() {
-		float intensity = Math.min(100,
-				PVector.sub(new PVector(mouseX, mouseY), engineDirector.getSetVector(redTank.getNozzle().getPosition()))
-						.mag() / 2);
-		Bullet bullet = redTank.spawnProjectile(intensity);
+		float intensity = Math.min(100, PVector
+				.sub(new PVector(mouseX, mouseY), engineDirector.getSetVector(currentTank.getNozzle().getPosition()))
+				.mag() / 2);
+		Bullet bullet = currentTank.spawnProjectile(intensity, this);
 		engineDirector.attach(bullet);
-		engineDirector.removeCollisions(bullet.getRigidBody(), redTank.getRigidBody());
+		engineDirector.removeCollisions(bullet.getRigidBody(), currentTank.getRigidBody());
 	}
 
 	public void draw() {
@@ -114,9 +120,9 @@ public class Game extends PApplet {
 		camera.setPosition(PVector.add(PVector.div(PVector.add(redTank.getPosition(), blueTank.getPosition()), 2),
 				new PVector(0, -5)));
 		camera.setSize(new PVector(scale, (9f / 16f) * scale));
-		redTank.getNozzle().setExtraAngle(
-				PVector.sub(new PVector(mouseX, mouseY), engineDirector.getSetVector(redTank.getNozzle().getPosition()))
-						.heading());
+		currentTank.getNozzle().setExtraAngle(PVector
+				.sub(new PVector(mouseX, mouseY), engineDirector.getSetVector(currentTank.getNozzle().getPosition()))
+				.heading());
 		for (char key : heldKeys.keySet()) {
 			keyHeld(key);
 		}

@@ -75,9 +75,9 @@ public class Tank extends GameObject {
 				Polygons.getRotatedVector(new PVector(left ? 0.1f : -0.1f, 0), rotation)));
 	}
 
-	public Bullet spawnProjectile(float intensity) {
+	public Bullet spawnProjectile(float intensity, Game game) {
 		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
-				nozzle.extraAngle, Math.min(100, MAX_STRENGTH));
+				nozzle.extraAngle, Math.min(100, MAX_STRENGTH), game);
 	}
 
 	//////////////////
