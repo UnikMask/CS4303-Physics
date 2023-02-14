@@ -121,36 +121,41 @@ public class Director {
 		if (world.contains(obj)) {
 			world.remove(obj);
 			for (Component c : obj.getComponents()) {
-				if (c instanceof VisualModel && visuals.contains(c)) {
-					visuals.remove(c);
-				}
-				if (c instanceof PhysicalObject
-						&& (bodies.containsKey((PhysicalObject) c) || colliders.contains((PhysicalObject) c))) {
-					PhysicalObject cPhys = (PhysicalObject) c;
-					if (c instanceof RigidBody) {
-						bodies.remove(c);
-					} else {
-						colliders.remove(cPhys);
-					}
-					HashSet<Pair> objPairs = objectMap.get(cPhys);
-					Iterator<Pair> setIterator = activePairs.iterator();
-					while (setIterator.hasNext()) {
-						Pair next = setIterator.next();
-						if (objPairs.contains(next)) {
-							setIterator.remove();
-						}
-					}
-					for (Pair next : objPairs) {
-						PhysicalObject rm = next.obj1 == c ? next.obj2 : next.obj1;
-						objectMap.get(rm).remove(next);
-					}
-					objectMap.remove(cPhys);
-				}
+				disattachComponent(c);
 			}
 			for (GameObject o : obj.getChildren()) {
 				disattach(o);
 			}
 		}
+	}
+
+	public void disattachComponent(Component c) {
+		if (c instanceof VisualModel && visuals.contains(c)) {
+			visuals.remove(c);
+		}
+		if (c instanceof PhysicalObject
+				&& (bodies.containsKey((PhysicalObject) c) || colliders.contains((PhysicalObject) c))) {
+			PhysicalObject cPhys = (PhysicalObject) c;
+			if (c instanceof RigidBody) {
+				bodies.remove(c);
+			} else {
+				colliders.remove(cPhys);
+			}
+			HashSet<Pair> objPairs = objectMap.get(cPhys);
+			Iterator<Pair> setIterator = activePairs.iterator();
+			while (setIterator.hasNext()) {
+				Pair next = setIterator.next();
+				if (objPairs.contains(next)) {
+					setIterator.remove();
+				}
+			}
+			for (Pair next : objPairs) {
+				PhysicalObject rm = next.obj1 == c ? next.obj2 : next.obj1;
+				objectMap.get(rm).remove(next);
+			}
+			objectMap.remove(cPhys);
+		}
+
 	}
 
 	/**
@@ -320,7 +325,7 @@ public class Director {
 	 * @return Whether the listener was successfully attached or not.
 	 */
 	public boolean attachEventListener(String id, EventListener listener) {
-		if (listeners.containsKey(id) || listenerToId.containsKey(listener)) {
+		if (!listeners.containsKey(id) || listenerToId.containsKey(listener)) {
 			return false;
 		}
 		listeners.get(id).add(listener);
