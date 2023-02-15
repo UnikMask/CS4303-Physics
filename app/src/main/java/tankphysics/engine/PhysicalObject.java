@@ -12,9 +12,9 @@ public interface PhysicalObject {
 	public static final float CORRECTION_THRESHOLD = 0.01f;
 	public static final float CORRECTION_PERCENTAGE = 0.4f;
 	public static final float SAME_EDGE_THRESHOLD = 0.01f;
-	public static final float ROTATIONAL_VELOCITY_THRESHOLD = 0.001f;
+	public static final float ROTATIONAL_VELOCITY_THRESHOLD = 0.0f;
 
-	public static final float INERTIA_THRESHOLD = 0.01f;
+	public static final float INERTIA_THRESHOLD = 0.0f;
 
 	///////////////////////
 	// Interface Methods //

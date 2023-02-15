@@ -96,6 +96,10 @@ public class GameObject {
 	// GameObject methods //
 	////////////////////////
 
+	public boolean isOnTop() {
+		return false;
+	}
+
 	/**
 	 * Method called on every director update.
 	 */

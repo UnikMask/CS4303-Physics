@@ -23,6 +23,7 @@ public class Director {
 	// Visuals
 	private GameObject camera;
 	private HashSet<VisualModel> visuals = new HashSet<>();
+	private HashSet<VisualModel> topVisuals = new HashSet<>();
 
 	// Forces
 	private long lastTimeStamp = new Date().getTime();
@@ -142,8 +143,12 @@ public class Director {
 	}
 
 	public void disattachComponent(Component c) {
-		if (c instanceof VisualModel && visuals.contains(c)) {
-			visuals.remove(c);
+		if (c instanceof VisualModel) {
+			if (visuals.contains(c)) {
+				visuals.remove(c);
+			} else if (topVisuals.contains(c)) {
+				topVisuals.remove(c);
+			}
 		}
 		if (c instanceof PhysicalObject
 				&& (bodies.containsKey((PhysicalObject) c) || colliders.contains((PhysicalObject) c))) {
@@ -180,39 +185,52 @@ public class Director {
 		for (GameObject object : objects) {
 			world.add(object);
 			for (Component c : object.getComponents()) {
-				if (c instanceof VisualModel) {
-					visuals.add((VisualModel) c);
-				} else if (c instanceof PhysicalObject) {
-					PhysicalObject cPhys = (PhysicalObject) c;
-					objectMap.put(cPhys, new HashSet<>());
-
-					// Add all new rigid body interactions to list of pairs
-					for (RigidBody b : bodies.keySet()) {
-						if (b.addForCollisions()) {
-							Pair newPair = new Pair(cPhys, b);
-							activePairs.add(newPair);
-							objectMap.get(cPhys).add(newPair);
-							objectMap.get(b).add(newPair);
-						}
-					}
-					if (c instanceof RigidBody) {
-						// Add all collision mesh interactions to list of pairs.
-						for (PhysicalObject mesh : colliders) {
-							if (mesh.addForCollisions()) {
-								Pair newPair = new Pair(cPhys, mesh);
-								activePairs.add(newPair);
-								objectMap.get(cPhys).add(newPair);
-								objectMap.get(mesh).add(newPair);
-							}
-						}
-						bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
-					} else {
-						colliders.add(cPhys);
-					}
-				}
+				attachComponent(c);
 			}
 			for (GameObject child : object.getChildren()) {
 				attach(child);
+			}
+		}
+	}
+
+	/**
+	 * Attach a component from the given GameObject to the Director.
+	 *
+	 * @param c The component to attach to the director.
+	 */
+	public void attachComponent(Component c) {
+		if (c instanceof VisualModel) {
+			if (c.getObject().isOnTop()) {
+				topVisuals.add((VisualModel) c);
+			} else {
+				visuals.add((VisualModel) c);
+			}
+		} else if (c instanceof PhysicalObject) {
+			PhysicalObject cPhys = (PhysicalObject) c;
+			objectMap.put(cPhys, new HashSet<>());
+
+			// Add all new rigid body interactions to list of pairs
+			for (RigidBody b : bodies.keySet()) {
+				if (b.addForCollisions()) {
+					Pair newPair = new Pair(cPhys, b);
+					activePairs.add(newPair);
+					objectMap.get(cPhys).add(newPair);
+					objectMap.get(b).add(newPair);
+				}
+			}
+			if (c instanceof RigidBody) {
+				// Add all collision mesh interactions to list of pairs.
+				for (PhysicalObject mesh : colliders) {
+					if (mesh.addForCollisions()) {
+						Pair newPair = new Pair(cPhys, mesh);
+						activePairs.add(newPair);
+						objectMap.get(cPhys).add(newPair);
+						objectMap.get(mesh).add(newPair);
+					}
+				}
+				bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
+			} else {
+				colliders.add(cPhys);
 			}
 		}
 	}
@@ -315,6 +333,11 @@ public class Director {
 	public void draw() {
 		// Draw visuals
 		for (VisualModel v : visuals) {
+			v.draw(camera, sketch);
+		}
+
+		// Top visuals are on top - draw after normal visuals.
+		for (VisualModel v : topVisuals) {
 			v.draw(camera, sketch);
 		}
 	}

@@ -10,6 +10,10 @@ public abstract class VisualModel implements Component {
 		this.object = object;
 	}
 
+	public GameObject getObject() {
+		return object;
+	}
+
 	/**
 	 * Draw the visual object onto the screen.
 	 *

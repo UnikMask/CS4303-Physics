@@ -1,10 +1,12 @@
 package tankphysics;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import processing.core.PApplet;
 import processing.core.PVector;
+import tankphysics.WindIndicator.WindDirection;
 import tankphysics.engine.CollisionMesh;
 import tankphysics.engine.Component;
 import tankphysics.engine.Director;
@@ -21,8 +23,9 @@ public class Game extends PApplet {
 	private final int NUM_BOXES = 65;
 	private final int BOXES_PER_COL = 5;
 	private final float BOX_SPACING = 1.6f;
-	private final float MAX_WIND_INTENSITY = 50;
-	private final int NUM_FRAMES_WIN_STATE = 420;
+	private final float MAX_WIND_INTENSITY = 20;
+	private final int NUM_FRAMES_WIN_STATE = 600;
+	private final float PLAYER_INDICATOR_Y_OFFSET = -2;
 
 	// Director engine handling
 	Director engineDirector;
@@ -35,6 +38,17 @@ public class Game extends PApplet {
 	Bullet currentBullet;
 	GameObject[] boundaries;
 	PVector windIntensity = new PVector();
+	GameObject currentPlayerIndicator;
+
+	// Notification text handling
+	String notificationText = "";
+	int notificationFrames = 0;
+
+	// UI objects
+	HealthBar redHealthBar = new HealthBar(new PVector(0.05f, 0.85f), color(255, 50, 50, 128));
+	HealthBar blueHealthBar = new HealthBar(new PVector(0.75f, 0.85f), color(50, 50, 255, 128));
+	WindIndicator windSpeed = new WindIndicator(new PVector(22.5f, 2));
+
 	GameState state = GameState.ONGOING;
 
 	// Input handling - held keys
@@ -96,7 +110,21 @@ public class Game extends PApplet {
 
 		lastTank.setState(Tank.TankState.IDLE);
 		currentTank.setState(Tank.TankState.MOVING);
-		windIntensity = new PVector((float) (Math.random() % (2 * MAX_WIND_INTENSITY)) - MAX_WIND_INTENSITY, 0);
+
+		int rand = (int) (Math.random() * 3.0f);
+
+		WindDirection dir = WindDirection.NEUTRAL;
+
+		if (rand % 3 == 0) {
+			windIntensity = new PVector(-MAX_WIND_INTENSITY, 0);
+			dir = WindDirection.LEFT;
+		} else if (rand % 3 == 2) {
+			windIntensity = new PVector(MAX_WIND_INTENSITY, 0);
+			dir = WindDirection.RIGHT;
+		} else {
+			windIntensity = new PVector(0, 0);
+		}
+		windSpeed.setDirection(dir, engineDirector);
 	}
 
 	public void initiateGameEnd(Tank tank) {
@@ -115,6 +143,11 @@ public class Game extends PApplet {
 		state = GameState.WON;
 	}
 
+	public void addNotification(String text) {
+		notificationText = text;
+		notificationFrames = 300;
+	}
+
 	////////////////////
 	// Input Handling //
 	////////////////////
@@ -125,7 +158,7 @@ public class Game extends PApplet {
 		}
 		heldKeys.remove(key);
 		if (key == 'w') {
-			engineDirector.togglePause();
+			// engineDirector.togglePause();
 		}
 		if (key == 'd') {
 			if (!heldKeys.containsKey('a')) {
@@ -220,10 +253,21 @@ public class Game extends PApplet {
 				new GameObject(new PVector(2, 10), new PVector(29, -5), false, new CollisionMesh(new PVector(),
 						Polygons.makeSquare(new PVector(5, 30)), Surfaces.getBoundarySurface())) };
 
-		redTank = new Tank(new PVector(5, -2), color(255, 0, 0));
+		// Build the tank indicator
+		currentPlayerIndicator = new GameObject(new PVector(0.5f, 0.5f), new PVector(0, 0), false,
+				new VisualPolygon(new PVector(),
+						Arrays.asList(new PVector(-0.25f, -0.25f), new PVector(0.25f, -0.25f), new PVector(0, 0.25f)),
+						color(255)));
+
+		// Set up the tanks
+		redHealthBar.setPercentage(0);
+		blueHealthBar.setPercentage(0);
+		redTank = new Tank(new PVector(5, -2), color(255, 0, 0), redHealthBar);
 		redTank.attachEventListener("onHit", getTankOnBoundaryHitListener(redTank));
-		blueTank = new Tank(new PVector(35, -2), color(0, 0, 255));
+		blueTank = new Tank(new PVector(35, -2), color(0, 0, 255), blueHealthBar);
 		blueTank.attachEventListener("onHit", getTankOnBoundaryHitListener(blueTank));
+
+		// Set up the box grid
 		GameObject[] boxGrid = new GameObject[NUM_BOXES];
 		for (int i = 0; i < NUM_BOXES; i++) {
 			boxGrid[i] = new Box(
@@ -232,7 +276,7 @@ public class Game extends PApplet {
 		}
 
 		// Attach all components to director.
-		engineDirector.attach(floor, redTank, blueTank);
+		engineDirector.attach(floor, redTank, blueTank, windSpeed, currentPlayerIndicator);
 		engineDirector.attach(boxGrid);
 		engineDirector.attach(boundaries);
 		engineDirector.attach(tankBoundaries);
@@ -251,9 +295,17 @@ public class Game extends PApplet {
 		// Set up game start state.
 		state = GameState.ONGOING;
 		currentTank = redTank;
+		currentPlayerIndicator
+				.setPosition(PVector.add(currentTank.getPosition(), new PVector(0, PLAYER_INDICATOR_Y_OFFSET)));
 		redTank.setState(Tank.TankState.MOVING);
 		engineDirector.attachEventListener("update", update());
 		engineDirector.setReady();
+	}
+
+	public void resetWorld() {
+		engineDirector = null;
+		redHealthBar.setPercentage(0);
+		blueHealthBar.setPercentage(0);
 	}
 
 	// PApplet and backend setup for the game.
@@ -271,9 +323,22 @@ public class Game extends PApplet {
 		background(0);
 
 		if (state == GameState.RESTART) {
+			resetWorld();
 			worldSetup();
 		} else {
 			engineDirector.nextFrame();
+
+			// Draw ongoing game UI
+			if (state == GameState.ONGOING) {
+				blueHealthBar.draw(this);
+				redHealthBar.draw(this);
+			}
+			if (!notificationText.equals("")) {
+				pushMatrix();
+				textSize(128);
+				text(notificationText, 300, 8);
+				popMatrix();
+			}
 		}
 	}
 
@@ -284,8 +349,13 @@ public class Game extends PApplet {
 
 			public void call(GameObject caller, Object... parameters) {
 				if (state == GameState.ONGOING) {
-					float scale = max(16, Math.abs(redTank.getPosition().x - blueTank.getPosition().x)) + 4;
+					notificationFrames--;
+					if (notificationFrames <= 0) {
+						notificationText = "";
+					}
 
+					// Set camera position
+					float scale = max(16, Math.abs(redTank.getPosition().x - blueTank.getPosition().x)) + 4;
 					float tanksXPos = (redTank.getPosition().x + blueTank.getPosition().x) / 2;
 					PVector nextCameraPosition = new PVector(tanksXPos, -5);
 					if (currentBullet != null) {
@@ -295,15 +365,21 @@ public class Game extends PApplet {
 					camera.setPosition(PVector.lerp(camera.getPosition(), nextCameraPosition, 0.1f));
 					camera.setSize(new PVector(scale, (9f / 16f) * scale));
 				} else if (state == GameState.WON) {
+					// Set camera position
 					camera.setPosition(PVector.lerp(camera.getPosition(), currentTank.getPosition(), 0.1f));
 					camera.setSize(PVector.lerp(camera.getSize(), new PVector(10, (9f / 16f) * 10f), 0.1f));
 
+					// Check for when to restart
 					winnerScreenTimer--;
 					if (winnerScreenTimer <= 0) {
 						state = GameState.RESTART;
 						engineDirector.disattachEventListener(this);
 					}
 				}
+
+				// Update player indicator and current tank aim
+				currentPlayerIndicator.setPosition(PVector.lerp(currentPlayerIndicator.getPosition(),
+						PVector.add(currentTank.getPosition(), new PVector(0, PLAYER_INDICATOR_Y_OFFSET)), 0.1f));
 				currentTank.setAimOptions(PVector.sub(new PVector(mouseX, mouseY),
 						engineDirector.getSetVector(currentTank.getNozzle().getPosition())));
 				for (char key : heldKeys.keySet()) {

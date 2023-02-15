@@ -21,7 +21,7 @@ public class Tank extends GameObject {
 			new PVector(0.5f, 0.5f), new PVector(-0.5f, 0.5f));
 	private static final List<PVector> hull = Polygons.makeRegularPolygon(new PVector(1, 1), 16, 0,
 			new PVector(0, -0.625f));
-	private static final float MAX_TANK_MASS = 200;
+	private static final float MAX_TANK_MASS = 50;
 	private static final float MAX_STRENGTH = 100;
 
 	// GameObject bomponents
@@ -90,8 +90,7 @@ public class Tank extends GameObject {
 
 	public void drive(boolean left) {
 		if (state == TankState.MOVING) {
-			tankBody.setVelocity(PVector.add(tankBody.getVelocity(),
-					Polygons.getRotatedVector(new PVector(left ? 0.1f : -0.1f, 0), rotation)));
+			tankBody.setVelocity(PVector.add(tankBody.getVelocity(), new PVector(left ? 0.1f : -0.1f, 0)));
 		}
 	}
 
@@ -132,7 +131,7 @@ public class Tank extends GameObject {
 	// Tank Event Listeners //
 	//////////////////////////
 
-	public EngineEventListener getTankBulletOnHitListener() {
+	public EngineEventListener getTankBulletOnHitListener(HealthBar bar) {
 		return new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				Object obj = parameters[0];
@@ -141,7 +140,7 @@ public class Tank extends GameObject {
 					RigidBody body = (RigidBody) obj;
 					float hitIntensity = PVector.sub(tankBody.getVelocity(), body.getVelocity()).mag() * body.getMass();
 					decrementHP(hitIntensity);
-					System.out.println(getPercentage() + "%");
+					bar.setPercentage(getPercentage());
 				}
 			}
 		};
@@ -151,12 +150,12 @@ public class Tank extends GameObject {
 	// Constructors //
 	//////////////////
 
-	public Tank(PVector position, int color) {
+	public Tank(PVector position, int color, HealthBar bar) {
 		super(new PVector(1.5f, 2.125f), position, false, new VisualPolygon(new PVector(), belly, color),
 				new VisualPolygon(new PVector(), hull, color));
 		this.attach(tankBody);
 		nozzle = new Nozzle(position, color);
 		this.addChild(nozzle, new PVector(0, -0.750f));
-		attachEventListener("onHit", getTankBulletOnHitListener());
+		attachEventListener("onHit", getTankBulletOnHitListener(bar));
 	}
 }
