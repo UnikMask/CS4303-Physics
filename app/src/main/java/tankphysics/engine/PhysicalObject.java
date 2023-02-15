@@ -12,9 +12,9 @@ public interface PhysicalObject {
 	public static final float CORRECTION_THRESHOLD = 0.01f;
 	public static final float CORRECTION_PERCENTAGE = 0.4f;
 	public static final float SAME_EDGE_THRESHOLD = 0.01f;
-	public static final float ROTATIONAL_VELOCITY_THRESHOLD = 0.01f;
+	public static final float ROTATIONAL_VELOCITY_THRESHOLD = 0.001f;
 
-	public static final float INERTIA_THRESHOLD = 0.05f;
+	public static final float INERTIA_THRESHOLD = 0.01f;
 
 	///////////////////////
 	// Interface Methods //
@@ -45,6 +45,8 @@ public interface PhysicalObject {
 	public PVector getCOM();
 
 	public float getInverseInertia();
+
+	public boolean addForCollisions();
 
 	public Iterable<CollisionMesh> getMeshes();
 

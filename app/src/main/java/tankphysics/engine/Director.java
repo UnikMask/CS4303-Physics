@@ -18,7 +18,7 @@ public class Director {
 	private PApplet sketch;
 	private HashSet<GameObject> world = new HashSet<>();
 	private float targetSecondsPerFrame = 1f / 144;
-	private static final int COLLISION_CHECK_PER_FRAME_LIMIT = 5;
+	private static final int COLLISION_CHECK_PER_FRAME_LIMIT = 2;
 
 	// Visuals
 	private GameObject camera;
@@ -31,16 +31,17 @@ public class Director {
 	private HashMap<RigidBody, HashSet<Force>> bodies = new HashMap<>();
 	private HashSet<PhysicalObject> colliders = new HashSet<>();
 	public boolean pause = false;
+	public boolean ready = false;
 
 	// Force handling
 	private HashMap<PhysicalObject, HashSet<Pair>> objectMap = new HashMap<>();
 	private HashSet<Pair> activePairs = new HashSet<>();
 
 	// Director's event listener list
-	private HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
+	private HashMap<String, HashSet<EngineEventListener>> listeners = new HashMap<>(
 			Map.ofEntries(Map.entry("update", new HashSet<>())));
-	private HashMap<EventListener, String> listenerToId = new HashMap<>();
-	private ArrayList<EventListener> listenersSetForDestruction = new ArrayList<>();
+	private HashMap<EngineEventListener, String> listenerToId = new HashMap<>();
+	private ArrayList<EngineEventListener> listenersSetForDestruction = new ArrayList<>();
 
 	// Class representing a pair of physical objects interacting together in
 	// collisions.
@@ -108,9 +109,13 @@ public class Director {
 		pause = !pause;
 	}
 
-	//////////////////////
-	// Gameloop methods //
-	//////////////////////
+	public void setReady() {
+		ready = true;
+	}
+
+	////////////////////////////
+	// World Handling Methods //
+	////////////////////////////
 
 	/**
 	 * Disattaches a game object from the world. Game object must be in the world to
@@ -128,7 +133,7 @@ public class Director {
 			for (GameObject o : obj.getChildren()) {
 				disattach(o);
 			}
-			for (EventListener l : obj.listenerToId.keySet()) {
+			for (EngineEventListener l : obj.listenerToId.keySet()) {
 				if (listenerToId.containsKey(l)) {
 					listenersSetForDestruction.add(l);
 				}
@@ -183,18 +188,22 @@ public class Director {
 
 					// Add all new rigid body interactions to list of pairs
 					for (RigidBody b : bodies.keySet()) {
-						Pair newPair = new Pair(cPhys, b);
-						activePairs.add(newPair);
-						objectMap.get(cPhys).add(newPair);
-						objectMap.get(b).add(newPair);
+						if (b.addForCollisions()) {
+							Pair newPair = new Pair(cPhys, b);
+							activePairs.add(newPair);
+							objectMap.get(cPhys).add(newPair);
+							objectMap.get(b).add(newPair);
+						}
 					}
 					if (c instanceof RigidBody) {
 						// Add all collision mesh interactions to list of pairs.
 						for (PhysicalObject mesh : colliders) {
-							Pair newPair = new Pair(cPhys, mesh);
-							activePairs.add(newPair);
-							objectMap.get(cPhys).add(newPair);
-							objectMap.get(mesh).add(newPair);
+							if (mesh.addForCollisions()) {
+								Pair newPair = new Pair(cPhys, mesh);
+								activePairs.add(newPair);
+								objectMap.get(cPhys).add(newPair);
+								objectMap.get(mesh).add(newPair);
+							}
 						}
 						bodies.put((RigidBody) c, new HashSet<>(Arrays.asList(GRAVITY)));
 					} else {
@@ -208,6 +217,36 @@ public class Director {
 		}
 	}
 
+	/**
+	 * Add a force to the stream of active forces for a rigid body.
+	 *
+	 * @param b The affected rigid body.
+	 * @param f The force affecting the rigid body.
+	 */
+	public void addForce(RigidBody b, Force f) {
+		if (bodies.containsKey(b) && !bodies.get(b).contains(f)) {
+			bodies.get(b).add(f);
+		}
+	}
+
+	/**
+	 * Remove from the RigidBody the given force.
+	 *
+	 * @param b The affected rigid body.
+	 * @param f The force to remove from the rigid body.
+	 */
+	public void removeForce(RigidBody b, Force f) {
+		if (bodies.containsKey(b) && bodies.get(b).contains(f)) {
+			bodies.get(b).remove(f);
+		}
+	}
+
+	/**
+	 * Remove collisions on the director between one object and another.
+	 *
+	 * @param objA 1st object of pair to remove.
+	 * @param objB 2nd object of pair to remove.
+	 */
 	public void removeCollisions(PhysicalObject objA, PhysicalObject objB) {
 		if (world.contains(objA.getObject()) && world.contains(objB.getObject())) {
 			Pair currentPair = new Pair(objA, objB);
@@ -220,9 +259,39 @@ public class Director {
 	}
 
 	/**
+	 * Remove all collisions for a physical object but the ones with a given set of
+	 * physical objects.
+	 *
+	 * @param target The physical object to remove collisions for
+	 * @param keep   The list of physical objects to keep collisions for.
+	 */
+	public void removeCollisionsForAllBut(PhysicalObject target, PhysicalObject... keep) {
+		HashSet<PhysicalObject> keepSet = new HashSet<>(Arrays.asList(keep));
+		for (PhysicalObject o : colliders) {
+			if (o != target && !keepSet.contains(o)) {
+				removeCollisions(target, o);
+			}
+		}
+		for (PhysicalObject o : bodies.keySet()) {
+			if (o != target && !keepSet.contains(o)) {
+				removeCollisions(target, o);
+			}
+		}
+	}
+
+	//////////////////////
+	// Gameloop methods //
+	//////////////////////
+
+	/**
 	 * Calculate updates and draw for the next game frame.
 	 */
 	public void nextFrame() {
+		// If the director is not ready, return without doing anything.
+		if (!ready) {
+			return;
+		}
+
 		// Get time taken since last frame and current seconds per frame.
 		long currentTime = new Date().getTime();
 		deltaT += ((float) (currentTime - lastTimeStamp)) / 1000f;
@@ -230,7 +299,7 @@ public class Director {
 
 		// Update loop
 		while (!pause && deltaT > targetSecondsPerFrame) {
-			for (EventListener l : listeners.get("update")) {
+			for (EngineEventListener l : listeners.get("update")) {
 				l.call(null);
 			}
 			update();
@@ -238,14 +307,6 @@ public class Director {
 		}
 		// Draw the image after all updates have been made.
 		draw();
-	}
-
-	public void cleanListeners() {
-		if (!listenersSetForDestruction.isEmpty())
-			for (EventListener l : listenersSetForDestruction) {
-				listeners.get(listenerToId.get(l)).remove(l);
-				listenerToId.remove(l);
-			}
 	}
 
 	/**
@@ -300,16 +361,24 @@ public class Director {
 		for (Pair next : collidedPairs) {
 			// Call on hit events on both GameObjects.
 			if (world.contains(next.obj1.getObject()) && world.contains(next.obj2.getObject())) {
-				for (EventListener l : next.obj1.getObject().getListeners("onHit")) {
-					l.call(next.obj2.getObject());
+				for (EngineEventListener l : next.obj1.getObject().getListeners("onHit")) {
+					l.call(next.obj2.getObject(), next.obj2);
 				}
-				for (EventListener l : next.obj2.getObject().getListeners("onHit")) {
-					l.call(next.obj1.getObject());
+				for (EngineEventListener l : next.obj2.getObject().getListeners("onHit")) {
+					l.call(next.obj1.getObject(), next.obj1);
 				}
 			}
 		}
 	}
 
+	/**
+	 * Get the projection of the given vector with the camera to get a position on
+	 * the game window.
+	 *
+	 * @param originalVector on base scale to check against.
+	 *
+	 * @return The vector's projection on the game window coordinates.
+	 */
 	public PVector getSetVector(PVector originalVector) {
 		PMatrix2D mat = new PMatrix2D();
 		PVector scale = new PVector(((float) sketch.width) / camera.getSize().x,
@@ -335,7 +404,7 @@ public class Director {
 	 *
 	 * @return Whether the listener was successfully attached or not.
 	 */
-	public boolean attachEventListener(String id, EventListener listener) {
+	public boolean attachEventListener(String id, EngineEventListener listener) {
 		if (!listeners.containsKey(id) || listenerToId.containsKey(listener)) {
 			return false;
 		}
@@ -352,12 +421,25 @@ public class Director {
 	 *
 	 * @return Whether the listener was successfully disattached or not.
 	 */
-	public boolean disattachEventListener(EventListener listener) {
+	public boolean disattachEventListener(EngineEventListener listener) {
 		if (!listenerToId.containsKey(listener)) {
 			return false;
 		}
 		listenersSetForDestruction.add(listener);
 		return true;
+	}
+
+	/**
+	 * Remove all listeners set for destruction.
+	 */
+	public void cleanListeners() {
+		if (!listenersSetForDestruction.isEmpty())
+			for (EngineEventListener l : listenersSetForDestruction) {
+				if (listenerToId.containsKey(l)) {
+					listeners.get(listenerToId.get(l)).remove(l);
+					listenerToId.remove(l);
+				}
+			}
 	}
 
 	//////////////////

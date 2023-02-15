@@ -16,9 +16,9 @@ public class GameObject {
 	protected float rotation = 0;
 
 	// Event listener list
-	protected HashMap<String, HashSet<EventListener>> listeners = new HashMap<>(
+	protected HashMap<String, HashSet<EngineEventListener>> listeners = new HashMap<>(
 			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("onHit", new HashSet<>())));
-	protected HashMap<EventListener, String> listenerToId = new HashMap<>();
+	protected HashMap<EngineEventListener, String> listenerToId = new HashMap<>();
 
 	/////////////////////////
 	// Getters and Setters //
@@ -85,7 +85,7 @@ public class GameObject {
 		}
 	}
 
-	public Iterable<EventListener> getListeners(String id) {
+	public Iterable<EngineEventListener> getListeners(String id) {
 		if (!listeners.containsKey(id)) {
 			return null;
 		}
@@ -131,7 +131,7 @@ public class GameObject {
 	 *
 	 * @return Whether the listener was successfully attached or not.
 	 */
-	public boolean attachEventListener(String id, EventListener listener) {
+	public boolean attachEventListener(String id, EngineEventListener listener) {
 		if (!listeners.containsKey(id) || listenerToId.containsKey(listener)) {
 			return false;
 		}
@@ -148,7 +148,7 @@ public class GameObject {
 	 *
 	 * @return Whether the listener was successfully disattached or not.
 	 */
-	public boolean disattachEventListener(EventListener listener) {
+	public boolean disattachEventListener(EngineEventListener listener) {
 		if (!listenerToId.containsKey(listener)) {
 			return false;
 		}

@@ -29,6 +29,7 @@ public class CollisionMesh implements Component, PhysicalObject {
 	private float staticFriction = 1f;
 	private float dynamicFriction = 1f;
 	private float bounciness = 1f;
+	private boolean addForCollisions = true;
 
 	// Optimisation features on rotation
 	private float ROTATION_CALC_THRESHOLD = 0.01f;
@@ -57,6 +58,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 
 	public float getBounciness() {
 		return bounciness;
+	}
+
+	public boolean addForCollisions() {
+		return addForCollisions;
 	}
 
 	public float getStaticFriction() {
@@ -304,6 +309,8 @@ public class CollisionMesh implements Component, PhysicalObject {
 				bounciness = val;
 			} else if (property.equals("calc_treshold")) {
 				ROTATION_CALC_THRESHOLD = val;
+			} else if (property.equals("add_for_collisions")) {
+				addForCollisions = (val != 0.0f);
 			}
 		}
 	}

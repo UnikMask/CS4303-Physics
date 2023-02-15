@@ -1,15 +1,16 @@
 package tankphysics;
 
-import tankphysics.engine.CollisionMesh;
-import tankphysics.engine.RigidBody;
-import tankphysics.engine.GameObject;
-import tankphysics.engine.Polygons;
-import tankphysics.engine.VisualPolygon;
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
+
 import processing.core.PVector;
+import tankphysics.engine.CollisionMesh;
+import tankphysics.engine.EngineEventListener;
+import tankphysics.engine.GameObject;
+import tankphysics.engine.Polygons;
+import tankphysics.engine.RigidBody;
+import tankphysics.engine.VisualPolygon;
 
 /**
  * Class representing a tank in the tankphysics game.
@@ -20,14 +21,15 @@ public class Tank extends GameObject {
 			new PVector(0.5f, 0.5f), new PVector(-0.5f, 0.5f));
 	private static final List<PVector> hull = Polygons.makeRegularPolygon(new PVector(1, 1), 16, 0,
 			new PVector(0, -0.625f));
-	private static final float TANK_MASS = 800;
+	private static final float MAX_TANK_MASS = 200;
 	private static final float MAX_STRENGTH = 100;
 
 	// GameObject bomponents
 	private CollisionMesh bellyMesh = new CollisionMesh(new PVector(), belly, null);
-	private RigidBody tankBody = new RigidBody(TANK_MASS, bellyMesh, new CollisionMesh(new PVector(), hull, null));
+	private RigidBody tankBody = new RigidBody(MAX_TANK_MASS, bellyMesh, new CollisionMesh(new PVector(), hull, null));
 	private Nozzle nozzle;
 	private float intensity;
+	private float tankPercentage = 0.0f;
 
 	// Class that represents the nozzle of the tank.
 	class Nozzle extends GameObject {
@@ -39,7 +41,6 @@ public class Tank extends GameObject {
 
 		@Override
 		public float getRotation() {
-			System.out.println(extraAngle);
 			return super.rotation + extraAngle;
 		}
 
@@ -118,6 +119,34 @@ public class Tank extends GameObject {
 		return null;
 	}
 
+	public void decrementHP(float damage) {
+		tankPercentage += damage / 100;
+		tankBody.setMass(MAX_TANK_MASS / (tankPercentage + 1));
+	}
+
+	public float getPercentage() {
+		return (tankPercentage) * 30;
+	}
+
+	//////////////////////////
+	// Tank Event Listeners //
+	//////////////////////////
+
+	public EngineEventListener getTankBulletOnHitListener() {
+		return new EngineEventListener() {
+			public void call(GameObject caller, Object... parameters) {
+				Object obj = parameters[0];
+
+				if (obj instanceof RigidBody) {
+					RigidBody body = (RigidBody) obj;
+					float hitIntensity = PVector.sub(tankBody.getVelocity(), body.getVelocity()).mag() * body.getMass();
+					decrementHP(hitIntensity);
+					System.out.println(getPercentage() + "%");
+				}
+			}
+		};
+	}
+
 	//////////////////
 	// Constructors //
 	//////////////////
@@ -128,5 +157,6 @@ public class Tank extends GameObject {
 		this.attach(tankBody);
 		nozzle = new Nozzle(position, color);
 		this.addChild(nozzle, new PVector(0, -0.750f));
+		attachEventListener("onHit", getTankBulletOnHitListener());
 	}
 }

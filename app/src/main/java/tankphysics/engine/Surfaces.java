@@ -14,4 +14,8 @@ public class Surfaces {
 	public static HashMap<String, Float> getWoodenSurface() {
 		return Maps.newHashMap(ImmutableMap.of("bounciness", 0.1f, "staticFricion", 1.2f, "dynamicFriction", 1f));
 	}
+
+	public static HashMap<String, Float> getBoundarySurface() {
+		return Maps.newHashMap(ImmutableMap.of("staticFriction", 0f, "dynamicFriction", 0f, "bounciness", 0.3f));
+	}
 }

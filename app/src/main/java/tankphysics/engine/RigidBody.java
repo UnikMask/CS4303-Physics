@@ -119,6 +119,10 @@ public class RigidBody implements Component, PhysicalObject {
 		object.setRotation(angle);
 	}
 
+	public boolean addForCollisions() {
+		return true;
+	}
+
 	/////////////////////////////////
 	// RigidBody Component Methods //
 	/////////////////////////////////

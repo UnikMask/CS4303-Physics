@@ -5,7 +5,7 @@ package tankphysics.engine;
  * from other game objects during events involving remote GameObjects or on
  * Director events.
  */
-public interface EventListener {
+public interface EngineEventListener {
 	/**
 	 * Call the event listener.
 	 *

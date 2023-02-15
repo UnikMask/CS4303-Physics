@@ -6,7 +6,7 @@ import processing.core.PApplet;
 import processing.core.PVector;
 import tankphysics.engine.CollisionMesh;
 import tankphysics.engine.Director;
-import tankphysics.engine.EventListener;
+import tankphysics.engine.EngineEventListener;
 import tankphysics.engine.GameObject;
 import tankphysics.engine.Polygons;
 import tankphysics.engine.RigidBody;
@@ -19,12 +19,12 @@ public class Box extends GameObject {
 			new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(1.5f, 1.5f)), boxSurface));
 	private static final float BOX_MASS = 20;
 	private static final int DESTRUCTION_FRAME_COUNT = 25;
-	private static final PVector DESTRUCTION_FINAL_SIZE = new PVector(16, 16);
+	private static final PVector DESTRUCTION_FINAL_SIZE = new PVector(4, 4);
 	private Integer numDestructionFrames = 0;
 	private VisualPolygon boxLooks;
 
-	public EventListener getBoxOnHitListener(Director engineDirector) {
-		return new EventListener() {
+	public EngineEventListener getBoxOnHitListener(Director engineDirector) {
+		return new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				if (caller instanceof Bullet) {
 					engineDirector.disattachComponent(rigidBody);
@@ -34,9 +34,9 @@ public class Box extends GameObject {
 		};
 	}
 
-	public EventListener getBoxDestructionListener(Director engineDirector) {
+	public EngineEventListener getBoxDestructionListener(Director engineDirector) {
 		GameObject self = this;
-		return new EventListener() {
+		return new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				numDestructionFrames++;
 
