@@ -16,7 +16,7 @@ import tankphysics.engine.VisualPolygon;
 public class Box extends GameObject {
 	// Constants
 	private static final Map<String, Float> boxSurface = Map.ofEntries(Map.entry("bounciness", 0.3f),
-			Map.entry("staticFriction", 1.2f), Map.entry("dynamicFriction", 1f));
+			Map.entry("staticFriction", 2f), Map.entry("dynamicFriction", 2f));
 	private static final float BOX_MASS = 20;
 	private static final int DESTRUCTION_FRAME_COUNT = 25;
 	private static final PVector DESTRUCTION_FINAL_SIZE = new PVector(4, 4);
