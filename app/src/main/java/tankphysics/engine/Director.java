@@ -44,6 +44,9 @@ public class Director {
 	private HashMap<EngineEventListener, String> listenerToId = new HashMap<>();
 	private ArrayList<EngineEventListener> listenersSetForDestruction = new ArrayList<>();
 
+	// Simulation
+	private static final float SIMULATION_TIMEOUT_SECONDS = 15;
+
 	// Class representing a pair of physical objects interacting together in
 	// collisions.
 	class Pair {
@@ -393,6 +396,33 @@ public class Director {
 				}
 				for (EngineEventListener l : next.obj2.getObject().getListeners("onHit")) {
 					l.call(next.obj1.getObject(), next.obj1);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Perform a local update with a given game object, ignoring all physics but
+	 * physics for the given game object, and all collisions aside from collision
+	 * handlers from the game object
+	 *
+	 * @param obj The rigid body to simulate
+	 */
+	public void localPhysicalUpdate(RigidBody obj) {
+		if (!bodies.containsKey(obj)) {
+			return;
+		}
+
+		cleanListeners();
+		obj.apply(bodies.get(obj).stream(), targetSecondsPerFrame);
+		ArrayDeque<Pair> queue = new ArrayDeque<>(objectMap.get(obj));
+		while (!queue.isEmpty()) {
+			Pair next = queue.pop();
+
+			if (PhysicalObject.requiresCollisionCheck(next.obj1, next.obj2)
+					&& !PhysicalObject.getCollisionDetails(next.obj1, next.obj2).isEmpty()) {
+				for (EngineEventListener l : obj.getObject().getListeners("onHit")) {
+					l.call(obj == next.obj1 ? next.obj2.getObject() : next.obj1.getObject());
 				}
 			}
 		}
