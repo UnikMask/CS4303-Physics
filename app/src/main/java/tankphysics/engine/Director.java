@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -407,13 +408,19 @@ public class Director {
 	 * handlers from the game object
 	 *
 	 * @param obj The rigid body to simulate
+	 * @return The list of physical objects this object has interacted with this
+	 *         frame.
 	 */
-	public void localPhysicalUpdate(RigidBody obj) {
+	public List<PhysicalObject> localPhysicalUpdate(RigidBody obj) {
 		if (!bodies.containsKey(obj)) {
-			return;
+			return null;
 		}
 
 		cleanListeners();
+		List<PhysicalObject> interactions = new ArrayList<>();
+		for (EngineEventListener l : obj.getObject().getListeners("update")) {
+			l.call(null);
+		}
 		obj.apply(bodies.get(obj).stream(), targetSecondsPerFrame);
 		ArrayDeque<Pair> queue = new ArrayDeque<>(objectMap.get(obj));
 		while (!queue.isEmpty()) {
@@ -424,8 +431,38 @@ public class Director {
 				for (EngineEventListener l : obj.getObject().getListeners("onHit")) {
 					l.call(obj == next.obj1 ? next.obj2.getObject() : next.obj1.getObject());
 				}
+				interactions.add(obj == next.obj1 ? next.obj2 : next.obj1);
 			}
 		}
+		return interactions;
+	}
+
+	/**
+	 * Simulate a game object in the world until it destroys itself or timeout
+	 * occurs.
+	 *
+	 * @param obj The game object to simulate
+	 * @param rb  The rigid body to attach to the game object and simulate.
+	 *
+	 * @return A set of all the physical objects the object interacted with.
+	 */
+	public HashSet<PhysicalObject> startSimulationAndReturnInteractions(GameObject obj, RigidBody rb) {
+		if (world.contains(obj) || bodies.containsKey(rb)) {
+			return null;
+		}
+
+		if (!obj.getComponents().contains(rb)) {
+			obj.attach(rb);
+		}
+		attach(obj);
+		HashSet<PhysicalObject> interactions = new HashSet<>();
+		for (float time = 0; world.contains(obj) && time < SIMULATION_TIMEOUT_SECONDS; time += targetSecondsPerFrame) {
+			interactions.addAll(localPhysicalUpdate(rb));
+		}
+		if (world.contains(obj)) {
+			disattach(obj);
+		}
+		return interactions;
 	}
 
 	/**
