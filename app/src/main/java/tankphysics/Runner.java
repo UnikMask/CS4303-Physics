@@ -41,6 +41,9 @@ public class Runner extends PApplet {
 	}
 
 	public void keyPressed() {
+		if (keyCode == ESC) {
+			key = 0;
+		}
 		if (state == RunnerState.GAME) {
 			if (key == 'p') {
 				setState(RunnerState.GAME_PAUSE);

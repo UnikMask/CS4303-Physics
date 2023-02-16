@@ -9,6 +9,7 @@ public class HelpMenu {
 	public void draw(PApplet sketch, PVector scaledMousePosition) {
 		// Draw help sign
 		sketch.pushStyle();
+		sketch.fill(255);
 		sketch.textSize((float) sketch.height / 100 * 15);
 		sketch.textAlign(PApplet.CENTER, PApplet.CENTER);
 		sketch.text("Help", sketch.width / 2, 1 * sketch.height / 16);
@@ -16,6 +17,7 @@ public class HelpMenu {
 
 		// Draw instructions
 		sketch.pushStyle();
+		sketch.fill(255);
 		sketch.textAlign(PApplet.LEFT, PApplet.CENTER);
 		float pageStart = 1.75f * sketch.height / 16;
 		float lineSize = 1.5f * sketch.height / 16;
