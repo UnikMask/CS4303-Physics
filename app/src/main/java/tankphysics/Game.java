@@ -197,8 +197,8 @@ public class Game {
 				// Update player indicator and current tank aim
 				currentPlayerIndicator.setPosition(PVector.lerp(currentPlayerIndicator.getPosition(),
 						PVector.add(currentTank.getPosition(), new PVector(0, PLAYER_INDICATOR_Y_OFFSET)), 0.1f));
-				currentTank.setAimOptions(PVector.sub(new PVector(sketch.mouseX, sketch.mouseY),
-						engineDirector.getSetVector(currentTank.getNozzle().getPosition())));
+				currentTank.getController().update(PVector.sub(new PVector(sketch.mouseX, sketch.mouseY),
+						engineDirector.getSetVector(currentTank.getNozzle().getPosition())), blueTank);
 				for (char key : heldKeys.keySet()) {
 					keyHeld(key);
 				}
@@ -249,8 +249,10 @@ public class Game {
 		redHealthBar.setPercentage(0);
 		blueHealthBar.setPercentage(0);
 		redTank = new Tank(new PVector(5, -2), sketch.color(255, 0, 0), redHealthBar);
+		redTank.setController(new PlayerController(redTank, this));
 		redTank.attachEventListener("onHit", getTankOnBoundaryHitListener(redTank));
 		blueTank = new Tank(new PVector(35, -2), sketch.color(0, 0, 255), blueHealthBar);
+		blueTank.setController(new PlayerController(blueTank, this));
 		blueTank.attachEventListener("onHit", getTankOnBoundaryHitListener(blueTank));
 
 		// Set up the box grid
@@ -337,18 +339,7 @@ public class Game {
 	}
 
 	public void keyHeld(char key) {
-		if (key == 'd') {
-			currentTank.drive(true);
-		}
-		if (key == 'a') {
-			currentTank.drive(false);
-		}
-		if (key == 'q') {
-			currentTank.getRigidBody().setRotationalVelocity(currentTank.getRigidBody().getRotationalVelocity() - 0.1f);
-		}
-		if (key == 'e') {
-			currentTank.getRigidBody().setRotationalVelocity(currentTank.getRigidBody().getRotationalVelocity() + 0.1f);
-		}
+		currentTank.getController().keyHeld(key);
 	}
 
 	public void mouseClicked() {
@@ -356,14 +347,7 @@ public class Game {
 			return;
 		}
 
-		Bullet bullet = currentTank.spawnProjectile();
-		if (bullet != null) {
-			engineDirector.attach(bullet);
-			bullet.attachEventListener("onHit", getBulletOnHitListener(bullet));
-			currentBullet = bullet;
-			engineDirector.attachEventListener("update", getBulletUpdateListener(bullet));
-			engineDirector.removeCollisions(bullet.getRigidBody(), currentTank.getRigidBody());
-		}
+		currentTank.getController().onClick(engineDirector.getSetVector(new PVector(sketch.mouseX, sketch.mouseY)));
 	}
 
 	//////////////////////////

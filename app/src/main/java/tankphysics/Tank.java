@@ -30,6 +30,7 @@ public class Tank extends GameObject {
 	private Nozzle nozzle;
 	private float intensity;
 	private float tankPercentage = 0.0f;
+	private TankController controller;
 
 	// Class that represents the nozzle of the tank.
 	class Nozzle extends GameObject {
@@ -84,6 +85,14 @@ public class Tank extends GameObject {
 		this.state = state;
 	}
 
+	public TankController getController() {
+		return controller;
+	}
+
+	public void setController(TankController controller) {
+		this.controller = controller;
+	}
+
 	////////////////////
 	// Tank Actions //
 	////////////////////
@@ -104,6 +113,7 @@ public class Tank extends GameObject {
 
 	public void setAimOptions(PVector mouseDist) {
 		if (state == TankState.MOVING) {
+			System.out.println(mouseDist);
 			nozzle.setExtraAngle(mouseDist.heading());
 			intensity = Math.min(mouseDist.mag() / 5, 100);
 		}
