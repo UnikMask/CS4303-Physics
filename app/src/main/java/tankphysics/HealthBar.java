@@ -9,7 +9,6 @@ import processing.core.PApplet;
 import processing.core.PVector;
 
 public class HealthBar {
-	private static final float EQ_TRESHOLD = 0.0001f;
 	private static final float TEXT_SIZE = 0.1f;
 	private final List<PVector> vertices = new ArrayList<>(Arrays.asList(new PVector(0, 0), new PVector(0.2f, -0.05f),
 			new PVector(0.175f, 0.1f), new PVector(0, 0.1f)));
