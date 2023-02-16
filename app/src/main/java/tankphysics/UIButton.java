@@ -78,7 +78,6 @@ public class UIButton {
 
 	public void generateButtonVertices() {
 		vertices = Polygons.makeSquare(size, new PVector());
-		System.out.println(vertices);
 	}
 
 	/**

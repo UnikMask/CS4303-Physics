@@ -10,9 +10,10 @@ public class MainMenu {
 
 	public void draw(PApplet sketch, PVector realMousePosition) {
 		sketch.pushStyle();
+		sketch.fill(255);
 		sketch.textSize((float) sketch.height / 100 * 30);
 		sketch.textAlign(PApplet.CENTER, PApplet.CENTER);
-		sketch.text("TaNkPhYsIcS", sketch.width / 2, sketch.height / 4);
+		sketch.text("TankPhysics", sketch.width / 2, 1.5f * sketch.height / 8);
 		sketch.popStyle();
 
 		playButton.draw(sketch, realMousePosition);
