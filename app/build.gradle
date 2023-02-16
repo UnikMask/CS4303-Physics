@@ -27,7 +27,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'tankphysics.Game'
+    mainClass = 'tankphysics.Runner'
 }
 
 tasks.named('test') {
