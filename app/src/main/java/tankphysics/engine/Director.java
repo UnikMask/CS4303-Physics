@@ -81,7 +81,6 @@ public class Director {
 		if (world.contains(camera)) {
 			this.camera = camera;
 		} else {
-			System.err.println("Can't set a game object not belonging to world as camera.");
 		}
 	}
 
@@ -105,9 +104,14 @@ public class Director {
 		return world;
 	}
 
-	public void togglePause() {
+	public boolean isPaused() {
+		return pause;
+	}
+
+	public void setPause(boolean pause) {
 		deltaT = 0;
-		pause = !pause;
+		this.pause = pause;
+		System.out.println("set to " + pause);
 	}
 
 	public void setReady() {
