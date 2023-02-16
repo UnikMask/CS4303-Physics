@@ -20,8 +20,8 @@ import tankphysics.engine.Surfaces;
 import tankphysics.engine.VisualPolygon;
 
 public class Game {
-	private final int NUM_BOXES = 65;
-	private final int BOXES_PER_COL = 5;
+	private final int NUM_BOXES = 39;
+	private final int BOXES_PER_COL = 3;
 	private final float BOX_SPACING = 1.6f;
 	private final float MAX_WIND_INTENSITY = 20;
 	private final int NUM_FRAMES_WIN_STATE = 600;
@@ -39,6 +39,7 @@ public class Game {
 	Tank blueTank;
 	Tank currentTank;
 	Bullet currentBullet;
+	GameObject floor;
 	GameObject[] boundaries;
 	PVector windIntensity = new PVector();
 	GameObject currentPlayerIndicator;
@@ -216,7 +217,7 @@ public class Game {
 		camera = engineDirector.getCamera();
 
 		// Make a plane for collision checks.
-		GameObject floor = new GameObject(new PVector(40, 20), new PVector(20, 10), false,
+		floor = new GameObject(new PVector(40, 20), new PVector(20, 10), false,
 				new VisualPolygon(new PVector(), Polygons.makeSquare(new PVector(40, 20)), sketch.color(128)),
 				new CollisionMesh(new PVector(), Polygons.makeSquare(new PVector(40, 20)),
 						Map.ofEntries(Map.entry("staticFriction", 0.6f), Map.entry("dynamicFriction", 0.5f),
