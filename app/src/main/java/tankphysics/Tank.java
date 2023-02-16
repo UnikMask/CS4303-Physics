@@ -119,6 +119,11 @@ public class Tank extends GameObject {
 		}
 	}
 
+	public void setAimOptions(float intensity, float angle) {
+		this.intensity = Math.min(intensity, 100);
+		nozzle.setExtraAngle(angle);
+	}
+
 	public Bullet spawnProjectile() {
 		if (state == TankState.MOVING) {
 			setState(TankState.SHOOTING);
