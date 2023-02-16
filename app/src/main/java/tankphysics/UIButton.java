@@ -45,11 +45,13 @@ public class UIButton {
 		shape.beginShape();
 		shape.fill(currentBgGray);
 		for (PVector v : vertices) {
-			shape.vertex((v.x + position.y) * sketch.width + position.x, (v.y + position.y) * sketch.height);
+			shape.vertex((v.x + position.x) * sketch.width, (v.y + position.y) * sketch.height);
 		}
 		shape.endShape(PApplet.CLOSE);
 
 		sketch.pushMatrix();
+		// sketch.scale((float) sketch.width, (float) sketch.height);
+		// sketch.translate(position.x, position.y);
 		sketch.shape(shape, 0, 0);
 		sketch.popMatrix();
 
@@ -82,8 +84,8 @@ public class UIButton {
 	/**
 	 * Call the onClick event of the button.
 	 */
-	public void callOnClickEvent() {
-		if (onClickEvent != null) {
+	public void callOnClickEvent(PVector adaptedMousePosition) {
+		if (onClickEvent != null && isHovered(adaptedMousePosition)) {
 			onClickEvent.call(null);
 		}
 	}
