@@ -43,7 +43,8 @@ public class Director {
 	private HashMap<String, HashSet<EngineEventListener>> listeners = new HashMap<>(
 			Map.ofEntries(Map.entry("update", new HashSet<>())));
 	private HashMap<EngineEventListener, String> listenerToId = new HashMap<>();
-	private ArrayList<EngineEventListener> listenersSetForDestruction = new ArrayList<>();
+	private ArrayList<EngineEventListener> destructListenersBuffer = new ArrayList<>();
+	private ArrayList<EventTuple> addListenersBuffer = new ArrayList<>();
 
 	// Simulation
 	private static final float SIMULATION_TIMEOUT_SECONDS = 15;
@@ -70,6 +71,16 @@ public class Director {
 		public Pair(PhysicalObject obj1, PhysicalObject obj2) {
 			this.obj1 = obj1;
 			this.obj2 = obj2;
+		}
+	}
+
+	private class EventTuple {
+		String id;
+		EngineEventListener event;
+
+		public EventTuple(String id, EngineEventListener event) {
+			this.id = id;
+			this.event = event;
 		}
 	}
 
@@ -115,7 +126,6 @@ public class Director {
 	public void setPause(boolean pause) {
 		deltaT = 0;
 		this.pause = pause;
-		System.out.println("set to " + pause);
 	}
 
 	public void setReady() {
@@ -144,7 +154,7 @@ public class Director {
 			}
 			for (EngineEventListener l : obj.listenerToId.keySet()) {
 				if (listenerToId.containsKey(l)) {
-					listenersSetForDestruction.add(l);
+					destructListenersBuffer.add(l);
 				}
 			}
 		}
@@ -325,9 +335,12 @@ public class Director {
 
 		// Update loop
 		while (!pause && deltaT > targetSecondsPerFrame) {
+			System.out.println("Entering update loop!");
 			for (EngineEventListener l : listeners.get("update")) {
+				System.out.println(l);
 				l.call(null);
 			}
+			System.out.println("Exiting update loop");
 			update();
 			deltaT -= targetSecondsPerFrame;
 		}
@@ -354,7 +367,7 @@ public class Director {
 	 * Update the engine logic.
 	 */
 	public void update() {
-		cleanListeners();
+		updateListeners();
 
 		// Apply forces to rigid bodies
 		for (RigidBody b : bodies.keySet()) {
@@ -416,7 +429,6 @@ public class Director {
 			return null;
 		}
 
-		cleanListeners();
 		List<PhysicalObject> interactions = new ArrayList<>();
 		for (EngineEventListener l : obj.getObject().getListeners("update")) {
 			l.call(null);
@@ -502,8 +514,8 @@ public class Director {
 		if (!listeners.containsKey(id) || listenerToId.containsKey(listener)) {
 			return false;
 		}
-		listeners.get(id).add(listener);
-		listenerToId.put(listener, id);
+		addListenersBuffer.add(new EventTuple(id, listener));
+		System.out.println("Event added to " + id + ": " + listener);
 		return true;
 	}
 
@@ -519,21 +531,29 @@ public class Director {
 		if (!listenerToId.containsKey(listener)) {
 			return false;
 		}
-		listenersSetForDestruction.add(listener);
+		destructListenersBuffer.add(listener);
 		return true;
 	}
 
 	/**
 	 * Remove all listeners set for destruction.
 	 */
-	public void cleanListeners() {
-		if (!listenersSetForDestruction.isEmpty())
-			for (EngineEventListener l : listenersSetForDestruction) {
-				if (listenerToId.containsKey(l)) {
-					listeners.get(listenerToId.get(l)).remove(l);
-					listenerToId.remove(l);
-				}
+	public void updateListeners() {
+		for (EngineEventListener l : destructListenersBuffer) {
+			if (listenerToId.containsKey(l)) {
+				listeners.get(listenerToId.get(l)).remove(l);
+				listenerToId.remove(l);
 			}
+		}
+		destructListenersBuffer = new ArrayList<>();
+
+		for (EventTuple t : addListenersBuffer) {
+			if (!listenerToId.containsKey(t.event)) {
+				listeners.get(t.id).add(t.event);
+				listenerToId.put(t.event, t.id);
+			}
+		}
+		addListenersBuffer = new ArrayList<>();
 	}
 
 	//////////////////
