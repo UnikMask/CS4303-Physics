@@ -118,6 +118,10 @@ public class Runner extends PApplet {
 	public void draw() {
 		background(0);
 
+		if ((state != RunnerState.GAME && state != RunnerState.GAME_PAUSE) && gameSystem != null) {
+			gameSystem = null;
+		}
+
 		switch (state) {
 		case MAIN:
 			menu.draw(this, new PVector(mouseX, mouseY));

@@ -43,6 +43,7 @@ public class Game {
 	GameObject[] boundaries;
 	PVector windIntensity = new PVector();
 	GameObject currentPlayerIndicator;
+	boolean initiateNextTurn = false;
 
 	// Notification text handling
 	String notificationText = "";
@@ -81,7 +82,7 @@ public class Game {
 			public void call(GameObject caller, Object... parameters) {
 				engineDirector.disattach(bullet);
 				currentBullet = null;
-				self.nextTurn();
+				initiateNextTurn = true;
 			}
 		};
 	}
@@ -90,6 +91,10 @@ public class Game {
 		return new EngineEventListener() {
 			Force f;
 			RigidBody body = bullet.getRigidBody();
+
+			public String toString() {
+				return "Bullet update";
+			}
 
 			public void call(GameObject caller, Object... parameters) {
 				PVector windNormal = windIntensity.copy().normalize();
@@ -106,6 +111,10 @@ public class Game {
 
 	public EngineEventListener getTankOnBoundaryHitListener(Tank tank) {
 		return new EngineEventListener() {
+			public String toString() {
+				return "Tank on boundary hit";
+			}
+
 			public void call(GameObject caller, Object... parameters) {
 				for (GameObject boundary : boundaries) {
 					if (caller == boundary) {
@@ -137,6 +146,7 @@ public class Game {
 			windIntensity = new PVector(0, 0);
 		}
 		windSpeed.setDirection(dir, engineDirector);
+		initiateNextTurn = false;
 	}
 
 	public void initiateGameEnd(Tank tank) {
@@ -164,6 +174,10 @@ public class Game {
 	public EngineEventListener update() {
 		return new EngineEventListener() {
 			int winnerScreenTimer = NUM_FRAMES_WIN_STATE;
+
+			public String toString() {
+				return "Game update";
+			}
 
 			public void call(GameObject caller, Object... parameters) {
 				if (state == GameState.ONGOING) {
@@ -253,7 +267,8 @@ public class Game {
 		redTank.setController(new PlayerController(redTank, this));
 		redTank.attachEventListener("onHit", getTankOnBoundaryHitListener(redTank));
 		blueTank = new Tank(new PVector(35, -2), sketch.color(0, 0, 255), blueHealthBar);
-		blueTank.setController(new PlayerController(blueTank, this));
+		blueTank.setController(new ComputerController(blueTank, this));
+		// blueTank.setController(new PlayerController(blueTank, this));
 		blueTank.attachEventListener("onHit", getTankOnBoundaryHitListener(blueTank));
 
 		// Set up the box grid
@@ -378,6 +393,11 @@ public class Game {
 				sketch.textSize(128);
 				sketch.text(notificationText, 300, 8);
 				sketch.popMatrix();
+			}
+
+			// After all is drawn - if a next turn should be initialized, initialize it.
+			if (initiateNextTurn) {
+				nextTurn();
 			}
 		}
 	}

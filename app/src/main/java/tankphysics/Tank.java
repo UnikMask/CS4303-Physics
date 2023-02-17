@@ -113,7 +113,6 @@ public class Tank extends GameObject {
 
 	public void setAimOptions(PVector mouseDist) {
 		if (state == TankState.MOVING) {
-			System.out.println(mouseDist);
 			nozzle.setExtraAngle(mouseDist.heading());
 			intensity = Math.min(mouseDist.mag() / 5, 100);
 		}
@@ -131,6 +130,11 @@ public class Tank extends GameObject {
 					nozzle.extraAngle, Math.min(intensity, MAX_STRENGTH));
 		}
 		return null;
+	}
+
+	public Bullet spawnProjectileStateless() {
+		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
+				nozzle.extraAngle, Math.min(intensity, MAX_STRENGTH));
 	}
 
 	public void decrementHP(float damage) {
