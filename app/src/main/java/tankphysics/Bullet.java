@@ -12,8 +12,10 @@ import tankphysics.engine.VisualPolygon;
 public class Bullet extends GameObject {
 	private static final float MAX_VELOCITY = 600;
 	private static final float BULLET_MASS = 20;
+	private static final float BULLET_DIAMETER = 0.5f;
 
-	private static List<PVector> bulletPolygon = Polygons.makeRegularPolygon(new PVector(0.2f, 0.2f), 26);
+	private static List<PVector> bulletPolygon = Polygons
+			.makeRegularPolygon(new PVector(BULLET_DIAMETER, BULLET_DIAMETER), 26);
 	private RigidBody bulletBody = new RigidBody(BULLET_MASS, new CollisionMesh(new PVector(), bulletPolygon, null));
 	private PVector startPosition;
 
@@ -30,7 +32,8 @@ public class Bullet extends GameObject {
 	}
 
 	public Bullet(PVector position, float angle, float intensity) {
-		super(new PVector(0.2f, 0.2f), position, false, new VisualPolygon(new PVector(), bulletPolygon, 255));
+		super(new PVector(BULLET_DIAMETER, BULLET_DIAMETER), position, false,
+				new VisualPolygon(new PVector(), bulletPolygon, 255));
 		attach(bulletBody);
 		startPosition = position.copy();
 		bulletBody.applyImpulse(PVector.mult(PVector.fromAngle(angle), (intensity / 100f) * MAX_VELOCITY), position,
