@@ -390,10 +390,12 @@ public class Game {
 				redHealthBar.draw(sketch);
 			}
 			if (!notificationText.equals("")) {
-				sketch.pushMatrix();
+				sketch.pushStyle();
 				sketch.textSize(128);
-				sketch.text(notificationText, 300, 8);
-				sketch.popMatrix();
+				sketch.fill(255);
+				sketch.textAlign(PApplet.CENTER, PApplet.BOTTOM);
+				sketch.text(notificationText, sketch.width / 2, 8);
+				sketch.popStyle();
 			}
 
 			// After all is drawn - if a next turn should be initialized, initialize it.

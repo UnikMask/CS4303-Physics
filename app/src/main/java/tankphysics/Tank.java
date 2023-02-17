@@ -6,6 +6,7 @@ import java.util.Map;
 
 import processing.core.PVector;
 import tankphysics.engine.CollisionMesh;
+import tankphysics.engine.Director;
 import tankphysics.engine.EngineEventListener;
 import tankphysics.engine.GameObject;
 import tankphysics.engine.Polygons;
@@ -40,10 +41,15 @@ public class Tank extends GameObject {
 		private static final List<PVector> nozzle = Polygons.makeSquare(new PVector(1.1f, 0.2f),
 				new PVector(0.1f, 0.1f));
 		private float extraAngle = 0;
+		private IntensityMarker marker;
 
 		@Override
 		public float getRotation() {
 			return super.rotation + extraAngle;
+		}
+
+		public IntensityMarker getMarker() {
+			return marker;
 		}
 
 		public void setExtraAngle(float angle) {
@@ -56,6 +62,57 @@ public class Tank extends GameObject {
 
 		Nozzle(PVector position, int color) {
 			super(new PVector(1.5f, 0.3f), position, true, new VisualPolygon(new PVector(), nozzle, color));
+			marker = new IntensityMarker(position);
+			addChild(marker, new PVector(0, 0));
+		}
+	}
+
+	// Class representing the intensity marker on top of the nozzle for hit marking.
+	class IntensityMarker extends GameObject {
+		private static final float MAX_LENGTH = 4.0f;
+		private static final float DIST_FROM_NOZZLE = 1.75f;
+		private static final float HEIGHT = 0.4f;
+		private static List<PVector> end = Polygons.makeRegularPolygon(new PVector(HEIGHT, HEIGHT), 26);
+		private static List<PVector> bar = Polygons.makeSquare(new PVector(1.0f, HEIGHT));
+		private VisualPolygon start;
+		private VisualPolygon middle;
+		private VisualPolygon endSide;
+		private boolean hidden = true;
+
+		public boolean isHidden() {
+			return hidden;
+		}
+
+		public void setIntensity(float intensity) {
+			float width = MAX_LENGTH * intensity / 100;
+			middle.setScale(new PVector(width, 1));
+			middle.setAnchor(new PVector(-(DIST_FROM_NOZZLE + width / 2), 0));
+			endSide.setAnchor(new PVector(-(DIST_FROM_NOZZLE + width), 0));
+		}
+
+		public void hide() {
+			start.setColor(0x00FFFFFF);
+			middle.setColor(0x00FFFFFF);
+			endSide.setColor(0x00FFFFFF);
+			hidden = true;
+		}
+
+		public void show() {
+			start.setColor(0xFFFFFFFF);
+			middle.setColor(0xFFFFFFFF);
+			endSide.setColor(0xFFFFFFFF);
+			hidden = false;
+		}
+
+		public IntensityMarker(PVector position) {
+			super(new PVector(0, 0), new PVector(), true);
+
+			start = new VisualPolygon(new PVector(-DIST_FROM_NOZZLE, 0), end, 0x00FFFFFF);
+			middle = new VisualPolygon(new PVector(-(DIST_FROM_NOZZLE + 0.5f), 0), bar, 0x00FFFFFF);
+			endSide = new VisualPolygon(new PVector(-(DIST_FROM_NOZZLE + 1.0f), 0), end, 0x00FFFFFF);
+			attach(start);
+			attach(middle);
+			attach(endSide);
 		}
 	}
 
@@ -116,12 +173,14 @@ public class Tank extends GameObject {
 		if (state == TankState.MOVING) {
 			nozzle.setExtraAngle(mouseDist.heading());
 			intensity = Math.min(mouseDist.mag() / 5, 100);
+			nozzle.getMarker().setIntensity(intensity);
 		}
 	}
 
 	public void setAimOptions(float intensity, float angle) {
 		this.intensity = Math.min(intensity, 100);
 		nozzle.setExtraAngle(angle);
+		nozzle.getMarker().setIntensity(intensity);
 	}
 
 	public Bullet spawnProjectile() {

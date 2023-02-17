@@ -35,6 +35,19 @@ public class VisualPolygon extends VisualModel {
 		this.scale = scale;
 	}
 
+	public PVector getAnchor() {
+		return anchor;
+	}
+
+	public void setColor(int colour) {
+		this.colour = colour;
+		this.polygonShape = null;
+	}
+
+	public void setAnchor(PVector anchor) {
+		this.anchor = anchor;
+	}
+
 	public void setTint(int tint) {
 		this.tint = tint;
 		this.polygonShape = null;

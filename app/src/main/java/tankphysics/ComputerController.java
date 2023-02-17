@@ -35,6 +35,9 @@ public class ComputerController implements TankController {
 	}
 
 	public void update(PVector mousePosition, Tank enemyTank) {
+		if (!tank.getNozzle().getMarker().isHidden()) {
+			tank.getNozzle().getMarker().hide();
+		}
 		if (tank.getState() != TankState.MOVING) {
 			return;
 		} else if (game.getState() == GameState.WON && game.currentTank == tank) {

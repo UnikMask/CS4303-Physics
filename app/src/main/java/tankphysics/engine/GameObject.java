@@ -54,7 +54,7 @@ public class GameObject {
 		this.position = position;
 		for (GameObject child : children.keySet()) {
 			if (child.followsParent) {
-				child.position = PVector.add(position, Polygons.getRotatedVector(children.get(child), rotation));
+				child.setPosition(PVector.add(position, Polygons.getRotatedVector(children.get(child), rotation)));
 			}
 		}
 	}
@@ -81,7 +81,7 @@ public class GameObject {
 		}
 		for (GameObject child : children.keySet()) {
 			if (child.followsParent) {
-				child.setRotation(angle);
+				child.setRotation(getRotation());
 			}
 		}
 	}

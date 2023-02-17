@@ -1,6 +1,7 @@
 package tankphysics;
 
 import processing.core.PVector;
+import tankphysics.Tank.TankState;
 
 public class PlayerController implements TankController {
 	Game game;
@@ -19,10 +20,14 @@ public class PlayerController implements TankController {
 	}
 
 	public void onClick(PVector mousePosition) {
+		tank.getNozzle().getMarker().hide();
 		TankController.shootProjectile(tank, game);
 	}
 
 	public void update(PVector mouseDist, Tank enemyTank) {
+		if (tank.getState() == TankState.MOVING && tank.getNozzle().getMarker().isHidden()) {
+			tank.getNozzle().getMarker().show();
+		}
 		tank.setAimOptions(mouseDist);
 	}
 
