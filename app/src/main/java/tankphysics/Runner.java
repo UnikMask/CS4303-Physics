@@ -12,6 +12,7 @@ public class Runner extends PApplet {
 	public MainMenu menu;
 	public HelpMenu help;
 	public PauseMenu pause;
+	public PlayerVsAiMenu pva;
 
 	enum RunnerState {
 		MAIN, HELP, PLAY, GAME, GAME_PAUSE
@@ -37,6 +38,8 @@ public class Runner extends PApplet {
 			gameSystem.mouseClicked();
 		} else if (state == RunnerState.GAME_PAUSE) {
 			pause.handleClickEvent(scaledMousePosition);
+		} else if (state == RunnerState.PLAY) {
+			pva.handleOnClickEvent(scaledMousePosition);
 		}
 	}
 
@@ -70,7 +73,7 @@ public class Runner extends PApplet {
 	public EngineEventListener getPlayButtonListener() {
 		return new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
-				setState(RunnerState.GAME);
+				setState(RunnerState.PLAY);
 			}
 		};
 	}
@@ -99,6 +102,26 @@ public class Runner extends PApplet {
 		};
 	}
 
+	public EngineEventListener getVsAIButtonListener() {
+		PApplet sketch = this;
+		return new EngineEventListener() {
+			public void call(GameObject caller, Object... parameters) {
+				setState(RunnerState.GAME);
+				gameSystem = new Game(sketch, true, false);
+			}
+		};
+	}
+
+	public EngineEventListener getVsPlayerButtonListener() {
+		PApplet sketch = this;
+		return new EngineEventListener() {
+			public void call(GameObject caller, Object... parameters) {
+				setState(RunnerState.GAME);
+				gameSystem = new Game(sketch, true, true);
+			}
+		};
+	}
+
 	//////////////////////////////////
 	// PApplet Main Handler Methods //
 	//////////////////////////////////
@@ -108,6 +131,7 @@ public class Runner extends PApplet {
 		menu = new MainMenu(this);
 		help = new HelpMenu(this);
 		pause = new PauseMenu(this);
+		pva = new PlayerVsAiMenu(this);
 	}
 
 	public void settings() {
@@ -130,10 +154,11 @@ public class Runner extends PApplet {
 			help.draw(this, new PVector(mouseX, mouseY));
 			break;
 		case PLAY:
+			pva.draw(this, new PVector(mouseX, mouseY));
 			break;
 		case GAME:
 			if (gameSystem == null) {
-				gameSystem = new Game(this);
+				gameSystem = new Game(this, false, false);
 			} else {
 				if (gameSystem.getState() == GameState.PAUSE) {
 					gameSystem.setState(GameState.ONGOING);

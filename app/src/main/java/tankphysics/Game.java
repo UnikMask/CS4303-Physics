@@ -44,6 +44,8 @@ public class Game {
 	PVector windIntensity = new PVector();
 	GameObject currentPlayerIndicator;
 	boolean initiateNextTurn = false;
+	boolean player1;
+	boolean player2;
 
 	// Notification text handling
 	String notificationText = "";
@@ -265,11 +267,10 @@ public class Game {
 		redHealthBar.setPercentage(0);
 		blueHealthBar.setPercentage(0);
 		redTank = new Tank(new PVector(5, -2), sketch.color(255, 0, 0), redHealthBar);
-		redTank.setController(new PlayerController(redTank, this));
+		redTank.setController(player1 ? new PlayerController(redTank, this) : new ComputerController(redTank, this));
 		redTank.attachEventListener("onHit", getTankOnBoundaryHitListener(redTank));
 		blueTank = new Tank(new PVector(35, -2), sketch.color(0, 0, 255), blueHealthBar);
-		blueTank.setController(new ComputerController(blueTank, this));
-		// blueTank.setController(new PlayerController(blueTank, this));
+		blueTank.setController(player2 ? new PlayerController(blueTank, this) : new ComputerController(blueTank, this));
 		blueTank.attachEventListener("onHit", getTankOnBoundaryHitListener(blueTank));
 
 		// Set up the box grid
@@ -405,8 +406,10 @@ public class Game {
 		}
 	}
 
-	public Game(PApplet sketch) {
+	public Game(PApplet sketch, boolean player1, boolean player2) {
 		this.sketch = sketch;
+		this.player1 = player1;
+		this.player2 = player2;
 		redHealthBar = new HealthBar(new PVector(0.05f, 0.85f), sketch.color(255, 50, 50, 128));
 		blueHealthBar = new HealthBar(new PVector(0.75f, 0.85f), sketch.color(50, 50, 255, 128));
 	}
