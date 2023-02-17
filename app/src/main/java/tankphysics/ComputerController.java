@@ -1,9 +1,6 @@
 package tankphysics;
 
 import java.util.HashSet;
-import java.util.List;
-
-import javax.swing.event.EventListenerList;
 
 import processing.core.PVector;
 import tankphysics.Tank.TankState;
@@ -18,10 +15,12 @@ public class ComputerController implements TankController {
 	private static final float EPSILON_VELOCITY = 0.5f;
 	private static final float CONTROL_ROT_VEL = (float) Math.PI / 16;
 	private static final float EPSILON_ROTATION = 0.1f;
-	private static final float NUM_NEIGHBOURS = 8;
+	private static final float NUM_NEIGHBOURS = 4;
 	private static final float INTENSITY_STEP = 5;
-	private static final float ANGLE_STEP = (float) Math.PI / 200;
-	private static final int TIMEOUT_NUM_STEPS = 10;
+	private static final float ANGLE_STEP = (float) Math.PI / 100;
+	private static final int TIMEOUT_NUM_STEPS = 40;
+	private static final float TANK_INTENSITY_ERROR = 1;
+	private static final float TANK_ANGLE_ERROR = (float) Math.PI / 32;
 
 	private Game game;
 	private Tank tank;
@@ -83,25 +82,25 @@ public class ComputerController implements TankController {
 		}
 
 		// Take a shot
-		takeShot();
+		takeShot(enemyTank);
 	}
 
 	// Tank random velocity and angle, then perform climbing hill algorithm until a
 	// point at distance
 	// from tank is found.
-	public void takeShot() {
+	public void takeShot(Tank enemyTank) {
 		float intensity = (float) Math.random() * 100;
 		float angle = (float) Math.random() * (float) Math.PI / 2;
-		float dist = simulateShotAndGetDistanceFromEnemyTank(tank, intensity, angle);
+		float dist = simulateShotAndGetDistanceFromEnemyTank(enemyTank, intensity, angle);
 		for (int step = 0; step < TIMEOUT_NUM_STEPS && dist != 0.0f; step++) {
 			float minIntensity = intensity;
 			float minAngle = angle;
 			float minDist = dist;
 			for (int i = 0; i < 8; i++) {
 				float newIntensity = intensity + (float) Math.cos(i * Math.PI / NUM_NEIGHBOURS) * INTENSITY_STEP;
-				float newAngle = intensity + (float) Math.cos(i * Math.PI / NUM_NEIGHBOURS) * ANGLE_STEP;
+				float newAngle = intensity + (float) Math.sin(i * Math.PI / NUM_NEIGHBOURS) * ANGLE_STEP;
 
-				float newDist = simulateShotAndGetDistanceFromEnemyTank(tank, newIntensity, newAngle);
+				float newDist = simulateShotAndGetDistanceFromEnemyTank(enemyTank, newIntensity, newAngle);
 				if (newDist < minDist) {
 					minIntensity = newIntensity;
 					minAngle = newAngle;
@@ -112,18 +111,19 @@ public class ComputerController implements TankController {
 				intensity = minIntensity;
 				angle = minAngle;
 				dist = minDist;
+			} else {
+				return;
 			}
 		}
 
 		// Take aim and shoot!
-		System.out.println("Taking shot - intensity: " + intensity + ", angle: " + angle);
-		tank.setAimOptions(intensity, angle);
+		tank.setAimOptions(intensity + (float) Math.random() * TANK_INTENSITY_ERROR,
+				angle + (float) Math.random() * TANK_ANGLE_ERROR);
 		TankController.shootProjectile(tank, game);
 	}
 
 	public float simulateShotAndGetDistanceFromEnemyTank(Tank enemyTank, float intensity, float angle) {
-		tank.setAimOptions(intensity, angle);
-		Bullet bullet = tank.spawnProjectileStateless();
+		Bullet bullet = tank.spawnProjectileStateless(intensity, angle);
 		bullet.attachEventListener("onHit", new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				game.engineDirector.disattach(bullet);

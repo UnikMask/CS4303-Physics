@@ -212,8 +212,10 @@ public class Game {
 				// Update player indicator and current tank aim
 				currentPlayerIndicator.setPosition(PVector.lerp(currentPlayerIndicator.getPosition(),
 						PVector.add(currentTank.getPosition(), new PVector(0, PLAYER_INDICATOR_Y_OFFSET)), 0.1f));
-				currentTank.getController().update(PVector.sub(new PVector(sketch.mouseX, sketch.mouseY),
-						engineDirector.getSetVector(currentTank.getNozzle().getPosition())), blueTank);
+				currentTank.getController()
+						.update(PVector.sub(new PVector(sketch.mouseX, sketch.mouseY),
+								engineDirector.getSetVector(currentTank.getNozzle().getPosition())),
+								currentTank == redTank ? blueTank : redTank);
 				for (char key : heldKeys.keySet()) {
 					keyHeld(key);
 				}

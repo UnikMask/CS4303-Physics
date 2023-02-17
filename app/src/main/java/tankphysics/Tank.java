@@ -132,9 +132,9 @@ public class Tank extends GameObject {
 		return null;
 	}
 
-	public Bullet spawnProjectileStateless() {
-		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(nozzle.extraAngle).mult(1)),
-				nozzle.extraAngle, Math.min(intensity, MAX_STRENGTH));
+	public Bullet spawnProjectileStateless(float intensity, float angle) {
+		return new Bullet(PVector.add(nozzle.getPosition(), PVector.fromAngle(angle).mult(1)), angle,
+				Math.min(intensity, MAX_STRENGTH));
 	}
 
 	public void decrementHP(float damage) {
