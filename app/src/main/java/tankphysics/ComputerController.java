@@ -3,6 +3,7 @@ package tankphysics;
 import java.util.HashSet;
 
 import processing.core.PVector;
+import tankphysics.Game.GameState;
 import tankphysics.Tank.TankState;
 import tankphysics.engine.EngineEventListener;
 import tankphysics.engine.GameObject;
@@ -35,6 +36,9 @@ public class ComputerController implements TankController {
 
 	public void update(PVector mousePosition, Tank enemyTank) {
 		if (tank.getState() != TankState.MOVING) {
+			return;
+		} else if (game.getState() == GameState.WON && game.currentTank == tank) {
+			tank.drive(tank.getPosition().x - game.floor.getPosition().x > 0);
 			return;
 		}
 
@@ -85,9 +89,9 @@ public class ComputerController implements TankController {
 		takeShot(enemyTank);
 	}
 
-	// Tank random velocity and angle, then perform climbing hill algorithm until a
-	// point at distance
-	// from tank is found.
+	/**
+	 * Take a shot directed towards the enemy tank.
+	 */
 	public void takeShot(Tank enemyTank) {
 		float intensity = (float) Math.random() * 100;
 		float angle = (float) Math.random() * (float) Math.PI / 2;

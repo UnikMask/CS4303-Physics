@@ -20,6 +20,7 @@ public class RigidBody implements Component, PhysicalObject {
 	// Torque related variables.
 	private float rotationalVelocity = 0f;
 	private float torque = 0f;
+	private float impulseMultipler = 1f;
 
 	/////////////////////////
 	// Getters and Setters //
@@ -52,6 +53,14 @@ public class RigidBody implements Component, PhysicalObject {
 
 	public Iterable<CollisionMesh> getHitbox() {
 		return hitbox;
+	}
+
+	public float getMultiplier() {
+		return impulseMultipler;
+	}
+
+	public void setMultiplier(float multiplier) {
+		impulseMultipler = multiplier;
 	}
 
 	public GameObject getObject() {
@@ -127,7 +136,11 @@ public class RigidBody implements Component, PhysicalObject {
 	// RigidBody Component Methods //
 	/////////////////////////////////
 
-	public void applyImpulse(PVector impulse, PVector contactPt, boolean checkRotationalVelocity) {
+	public void applyImpulse(PVector impulse, PVector contactPt, PhysicalObject ref, boolean checkRotationalVelocity) {
+		// Call event listeners that obey on impulse
+		for (EngineEventListener l : getObject().getListeners("impulse")) {
+			l.call(ref.getObject(), impulse);
+		}
 		velocity = PVector.add(velocity, PVector.mult(impulse, getInverseMass()));
 		if (checkRotationalVelocity) {
 			rotationalVelocity += inverseInertia * contactPt.cross(impulse).z;

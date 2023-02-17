@@ -141,7 +141,10 @@ public class CollisionMesh implements Component, PhysicalObject {
 		return anchor;
 	}
 
-	public void applyImpulse(PVector impulse, PVector contactPt, boolean checkRotationalVelocity) {
+	public void applyImpulse(PVector impulse, PVector contactPt, PhysicalObject ref, boolean checkRotationalVelocity) {
+		for (EngineEventListener l : getObject().getListeners("impulse")) {
+			l.call(ref.getObject(), impulse);
+		}
 		return;
 	}
 

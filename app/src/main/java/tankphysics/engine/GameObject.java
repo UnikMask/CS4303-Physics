@@ -17,7 +17,8 @@ public class GameObject {
 
 	// Event listener list
 	protected HashMap<String, HashSet<EngineEventListener>> listeners = new HashMap<>(
-			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("onHit", new HashSet<>())));
+			Map.ofEntries(Map.entry("update", new HashSet<>()), Map.entry("onHit", new HashSet<>()),
+					Map.entry("impulse", new HashSet<>())));
 	protected HashMap<EngineEventListener, String> listenerToId = new HashMap<>();
 
 	/////////////////////////

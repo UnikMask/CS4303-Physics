@@ -50,7 +50,7 @@ public interface PhysicalObject {
 
 	public Iterable<CollisionMesh> getMeshes();
 
-	public void applyImpulse(PVector impulse, PVector affectPt, boolean checkRotationalVelocity);
+	public void applyImpulse(PVector impulse, PVector affectPt, PhysicalObject ref, boolean checkRotationalVelocity);
 
 	////////////////////
 	// Static Methods //
@@ -162,8 +162,8 @@ public interface PhysicalObject {
 			float impulseFactor = -(1 + totalBounce) * velocityProjectionOnNormal / factorDiv;
 			PVector impulse = PVector.mult(details.normal, impulseFactor);
 
-			objA.applyImpulse(PVector.mult(impulse, -1), radiusA, checkRotationalVelocity);
-			objB.applyImpulse(impulse, radiusB, checkRotationalVelocity);
+			objA.applyImpulse(PVector.mult(impulse, -1).copy(), radiusA, objB, checkRotationalVelocity);
+			objB.applyImpulse(impulse.copy(), radiusB, objA, checkRotationalVelocity);
 
 			// Calculate tangent for friction
 			PVector tan = PVector
@@ -180,8 +180,8 @@ public interface PhysicalObject {
 			if (Math.abs(frictionFactor) > staticFactor * impulseFactor) {
 				frictionImpulse = PVector.mult(tan, -impulseFactor * dynamicFactor);
 			}
-			objA.applyImpulse(PVector.mult(frictionImpulse, -1), radiusA, checkRotationalVelocity);
-			objB.applyImpulse(frictionImpulse, radiusB, checkRotationalVelocity);
+			objA.applyImpulse(PVector.mult(frictionImpulse, -1).copy(), radiusA, objB, checkRotationalVelocity);
+			objB.applyImpulse(frictionImpulse.copy(), radiusB, objA, checkRotationalVelocity);
 		}
 
 		return -details.penetration > CORRECTION_THRESHOLD;

@@ -77,7 +77,6 @@ public class Game {
 	//////////////////////
 
 	public EngineEventListener getBulletOnHitListener(Bullet bullet) {
-		Game self = this;
 		return new EngineEventListener() {
 			public void call(GameObject caller, Object... parameters) {
 				engineDirector.disattach(bullet);

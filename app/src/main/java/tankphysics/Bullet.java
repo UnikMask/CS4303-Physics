@@ -34,6 +34,6 @@ public class Bullet extends GameObject {
 		attach(bulletBody);
 		startPosition = position.copy();
 		bulletBody.applyImpulse(PVector.mult(PVector.fromAngle(angle), (intensity / 100f) * MAX_VELOCITY), position,
-				false);
+				null, false);
 	}
 }

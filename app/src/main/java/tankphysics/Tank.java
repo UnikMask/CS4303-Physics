@@ -31,6 +31,7 @@ public class Tank extends GameObject {
 	private float intensity;
 	private float tankPercentage = 0.0f;
 	private TankController controller;
+	private float hitImpulse = 0; // Keep track of hit impulse on bullet hit so it doesn't count 1+ times.
 
 	// Class that represents the nozzle of the tank.
 	class Nozzle extends GameObject {
@@ -138,12 +139,12 @@ public class Tank extends GameObject {
 	}
 
 	public void decrementHP(float damage) {
-		tankPercentage += damage / 100;
-		tankBody.setMass(MAX_TANK_MASS / (tankPercentage + 1));
+		tankPercentage += damage / 200;
+		tankBody.setMultiplier(1 + tankPercentage);
 	}
 
 	public float getPercentage() {
-		return (tankPercentage) * 30;
+		return (tankPercentage) * 100;
 	}
 
 	//////////////////////////
@@ -155,11 +156,31 @@ public class Tank extends GameObject {
 			public void call(GameObject caller, Object... parameters) {
 				Object obj = parameters[0];
 
-				if (obj instanceof RigidBody) {
+				if (caller instanceof Bullet) {
+					decrementHP(hitImpulse);
+					bar.setPercentage(getPercentage());
+					hitImpulse = 0;
+				} else if (obj instanceof RigidBody) {
 					RigidBody body = (RigidBody) obj;
 					float hitIntensity = PVector.sub(tankBody.getVelocity(), body.getVelocity()).mag() * body.getMass();
 					decrementHP(hitIntensity);
 					bar.setPercentage(getPercentage());
+				}
+			}
+		};
+	}
+
+	public EngineEventListener getTankImpulseListener() {
+		return new EngineEventListener() {
+			public void call(GameObject caller, Object... parameters) {
+				if (parameters.length != 1 || !(parameters[0] instanceof PVector)) {
+					return;
+				}
+				if (caller instanceof Bullet) {
+					if (hitImpulse == 0) {
+						hitImpulse = ((PVector) parameters[0]).mag();
+						((PVector) parameters[0]).mult(tankPercentage * 10);
+					}
 				}
 			}
 		};
@@ -176,5 +197,6 @@ public class Tank extends GameObject {
 		nozzle = new Nozzle(position, color);
 		this.addChild(nozzle, new PVector(0, -0.750f));
 		attachEventListener("onHit", getTankBulletOnHitListener(bar));
+		attachEventListener("impulse", getTankImpulseListener());
 	}
 }
