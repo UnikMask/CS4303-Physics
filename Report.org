@@ -1,0 +1,13 @@
+#+TITLE: CS4303 Practical 1 Report
+
+#+AUTHOR: 190014935
+
+#+LATEX_HEADER: \usepackage{fancyhdr}
+#+LATEX_HEADER: \usepackage[a4paper, total={6in, 8in}]{geometry}
+#+LATEX_HEADER: \usepackage{fontspec}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \pagestyle{fancy}
+#+LATEX_HEADER: \fancyhf{}
+#+LATEX_HEADER: \lhead{190014935}
+#+LATEX_HEADER: \rhead{CS4303 Practical 1- 17/02/2023}
+#+LATEX_HEADER: \fancyfoot[RO, LE] {Page \thepage}
