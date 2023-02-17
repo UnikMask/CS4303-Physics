@@ -88,6 +88,8 @@ public class Game {
 		};
 	}
 
+	// Get bullet update listener - which adds the force to simulate the wind
+	// effect.
 	public EngineEventListener getBulletUpdateListener(Bullet bullet) {
 		return new EngineEventListener() {
 			Force f;

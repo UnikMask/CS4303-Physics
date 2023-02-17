@@ -21,7 +21,7 @@ public class PlayerVsAiMenu {
 	}
 
 	public PlayerVsAiMenu(Runner runner) {
-		vsPlayer = new UIButton(new PVector(0.25f, 0.4f), new PVector(0.25f, 0.15f), "Versus Player",
+		vsPlayer = new UIButton(new PVector(0.2f, 0.4f), new PVector(0.25f, 0.15f), "Versus Player",
 				runner.getVsPlayerButtonListener());
 		vsAI = new UIButton(new PVector(0.55f, 0.4f), new PVector(0.25f, 0.15f), "Versus AI",
 				runner.getVsAIButtonListener());
