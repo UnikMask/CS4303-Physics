@@ -76,10 +76,6 @@ public class HealthBar {
 		return position;
 	}
 
-	public List<UIObject> getContainingObjects() {
-		return new ArrayList<>();
-	}
-
 	public HealthBar(PVector position, int color) {
 		this.position = position;
 		this.bgColor = color;
