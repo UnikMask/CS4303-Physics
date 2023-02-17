@@ -11,3 +11,287 @@
 #+LATEX_HEADER: \lhead{190014935}
 #+LATEX_HEADER: \rhead{CS4303 Practical 1- 17/02/2023}
 #+LATEX_HEADER: \fancyfoot[RO, LE] {Page \thepage}
+
+* Introduction
+For this practical, we were tasked with implementing a particle artillery game, in which 2 tanks would
+take turns shooting at each other until one is destroyed. The goal of it is to understand how
+to model and implement physics systems in a video game. Overall, I have completed a video game which
+implements particle physics, but dwelled further by making a rigid body physics simulation as well.
+
+The report is written in 3 main parts. First, the overall game is described, along with some pictures
+to show the looks of the game, along with its quirks. Then, all design decisions are described and
+evaluated. Finally, I discuss the effects of the decisions on the overall gameplay feel idea of the game.
+
+* Game
+The game I implemented strays from that of a normal tank game, in that it's gameplay is supposed to feel
+more dynamic, with an important emphasis on rigid body rotational physics - opting into a more fast-paced
+gameplay, inspired from that of Super Smash Brothers and Boom Blocks.
+
+** Terrain
+The terrain in this game is essentially just a small and flat surface. The 2 tanks are located at the
+opposite sides of the platform. Scaled, the terrain's size is of about 40 meters. Such constraint
+makes less for a realistic tank simulation, instead opting for closer area gameplay.
+
+However, both tanks can only move on their side of the map and cannot collide each other. Instead, they
+have to shoot at each other from a distance that at scale is of about 20 meters.
+
+** Boxes
+Between both tanks are located a number of boxes standing in the way of the projectiles. All boxes
+in the map are rigid bodies, which collide between each other, the floor, the tanks, and the shells
+if they are shot.
+
+The boxes here serve 2 purpose. First, their rigid body dynamics make the interaction between the shells,
+the tanks and other boxes more realistic and dynamic. Seeing boxes get hit by objects and fall over is
+fun, and the game tries to translate that fun to the screen. Second, they serve as obstacles to
+the tanks' vision, and as objects which the tanks have to destroy in order to get a better line of sight
+to the enemy tank.
+
+Credits to _Polygonix Games[fn:: https://opengameart.org/content/pixel-wooden-crate]_ for making the box
+pixel art asset. The asset is in the Public Domain.
+
+** Tanks
+The tanks in this game do not look or act like usual tanks do. They are small, light, fast, and can
+freely move left, right, and rotate leftwards and rightwards according to the input. These tanks
+cannot move into the enemy tank's side of the terrain, but they can accidentally move away from the ledge
+and fall - although the specs ask not to allow the tanks to move away from the terrain, the dynamics
+of this implementation require so, because the tank is also supposed to try staying on the terrain
+after it has been hit by a shell.
+
+Players can use mouse controls to control the intensity and the angle of a shot, after which they cannot
+move or shoot until the start of their next turn.
+
+** HP System
+Usual tank games usually deal with damage in 2 ways:
++ Simulate real life and deal physical damage to a tank depending on where the shot landed, and consider
+  the tank is destroyed if the shot would destroy the tank in a real life environment.
++ Use a general Health Point pool for the tank. The tank is destroyed once it's HP pool has depleted.
+
+Contrary to intuition, this game does not implement a HP system for the tanks. Instead, tanks have
+a percentage linked to them. This percentage is linked to a multiplier of the energy a tank receives
+when it is hit by a bullet. The higher the percentage, the further away a tank will be thrown when it is
+hit by a bullet, and the more chances the tank falls of the map without the ability to recover.
+
+This system is heavily inspired from the video game Super Smash Bros. on Nintendo 64, in which characters
+fight off and one looses if they fall off the map or are flinged far enough from the screen. The quirk of
+such a system is how it introduces into the game the requirement for the player to recover from a hit by
+trying to stay on the map, or try to come back, in turn leading to a faster-paced and more fighting-game like feeling.
+
+** Winning the Game
+A game is won for the first tank that can get the other tank off the map twice. The game therefore acts
+in a best-of 3 mechanic, which is a classic scheme for most fighting games. Considering the game is
+supposed to be pretty dynamic and fast-paced, like a fighting game, it makes sense that a best-of 3
+mechanic fits the gameplay here.
+
+* Design
+The whole program is separated into 2 main parts: the engine, which acts as a backend to the game,
+and the game itself, which acts as a frontend, using the engine for all physics and visual logic.
+
+** The Engine
+The engine designed here is primarily a 2D rigid body rotational physics engine, with support for
+point mass particles. It takes game objects into its world and handles their logic, visual components,
+and physical components. This mechanism means all physics are handled on the backend and game design can
+be resumed into attaching objects into the engine's world/scene and leaving the engine to deal with the
+rest.
+
+*** GameObjects and Components
+The way the engines deals with the world is that it attaches GameObject objects into the world.
+A GameObject is a simple object with position, size and rotation. But they can hold components within
+them, which dictate to the engine how they should be handled with visually and physically. At the
+current moment, there are 2 kinds of components: VisualModel components, and PhysicalObject components.
+VisualModel components describe polygons or sprites that can be displayed on screen, and PhysicalObject
+components describe how the object reacts to the physics around it.
+
+The benefit of doing objects with multiple components is that on the frontend, a user simply needs
+to make a GameObject, add visual and physical components to the object, then attach the game object
+to the engine. This will result in a component which can both be seen on screen, and interacts with
+the physics of the game. This system is also highly modulable and extensive by design, meaning it is
+possible to make objects with multiple visual components, or multiple physical components. Finally,
+extra components can be added later on, further diversifying the possibilities on the frontend.
+
+*** Camera and Visuals
+The engine uses Processing's matrices feature to perform graphic transforms upon drawing objects into
+the display. This allows the engine to draw all components based on a camera.
+
+The benefits of a camera are 2-fold:
+1. Cameras allow to draw the world in relation to its position and size, meaning the world as displayed
+   on the screen can move and zoom in or out, leading to better graphical effects.
+2. Objects can be defined in the frontend using coordinates that are independent of the display size
+   and width, which firstly means the game can be run without issues on multiple resolutions and display
+   size, but also that vectors can be defined with 1 unit per meter. This facilitates later computations
+   a lot as the number of pixels per length unit can be ignored.
+
+A camera is automatically generated upon the creation of the engine director in =Director.java=, and
+can be gotten using =getCamera()=, and modified as a GameObject.
+
+After dealing with camera translation and scaling, the engine moves on to draw the visual components
+of the world. Visuals are separated into sprites and visual polygons, although the game only makes use
+of visual polygons.
+
+Visual polygons are sets of vertices which define a shape, which can then be filled with a colour or
+textured. Thanks to the scaling system described earlier, the draw mechanic is relatively easy.
+Finally, thanks to the OpenGL backend, polygons can be textured, allowing for better game graphics.
+
+*** Physics Engine
+
+The main feature of this engine is it's support for 2D rotational rigid body physics engine, with
+support for point mass particles.
+
+Rigid body rotational physics are a complex system that is very hard to get right, and which is even
+more complicated once we are dealing with 3D worlds. Thankfully here, the world is in 2D.
+
+Firstly, all components made for physics follow the PhysicalObject component interface. This
+interface allows calculation of collisions and forces between all components which implement the
+Physicalobject interface, making it useful when dealing with rigid bodies against immovable objects.
+The 2 main components implement the PhysicalObject interface are as such:
++ CollisionMeshes - these objects are defined as convex polygons, circles, or particles. Their
+  particularity is that used by themselves, they are considered as immovable objects. When used
+  in collisions, that means they cannot move or rotate. Here, the floor and boundaries use a
+  CollisionMesh.
++ RigidBody - rigid bodies are components that are fully affected by things in the world - gravity,
+  other forces, and other physical objects around them. They possess an acceleration, a velocity,
+  a rotational velocity, and a mass. Each update, their position is recalculated based on these
+   parameters and objects around them.
+
+Upon each update, all forces linked to the given rigid body are applied to it, which allows simulation
+of wind on the projectile, and gravity on all rigid body objects. Position must be integrated from
+velocity and acceleration, so the formulas for velocity and position are as such:
+
+\[\vec{v} += \vec{a} \times \Delta t\]
+
+\[position += \vec{v} \times \Delta t\]
+
+Where \(\vec{v}\) is the velocity, \(\vec{a}\) the acceleration, and \(\Delta t\) the time taken by the
+frame.
+
+*** Collision Checking
+
+Second, the engine deals with collisions on updates via pairs of objects that are in collision relations.
+Upon each update, the engine adds all active pairs to a queue and processes each of them, checking if
+there are collisions, and dealing with impulses if there are. This also allows to keep pairs that
+did collide, or re-add pairs to the queue if their collision has to be recalculated. This finally
+allows to edit what physical objects another object can interact with. Therefore a bullet can
+interact with all physical objects but the tank they were fired from.
+
+Third, the engine checks for collision first by checking if the boxes defined by the 2 objects'
+respective sizes collide with each other. This check is extremely fast and saves computation for
+collision checks that matter.
+
+In cases where a collision check is necessary, collision check is solved as a collision between
+circle to circle, polygon to circle, circle to point, polygon to point, or polygon to polygon.
+Most checks are relatively easy, but the most interesting kind of collision here is the polygon to
+polygon collision check.
+
+First of all, polygon to polygon checks are defined only for convex polygons. Thankfully, all polygons
+can be translated into convex polygons. The engine does not take care of that, and this is left at the
+current moment as a task to the frontend if it is ever necessary to do so.
+
+Polygon to polygon collision checking is done using the Separating Axis Theorem - in convex polygons,
+it can be said that if a point lies inside a polygon, then by the point of view of all edges of the
+polygons, the point will be on the inside part of the edge. Doing so gives us a reference face
+from one polygon, on an incident point for the other polygon.
+
+Then, for better accuracy, the engine checks if the collision that happened is a vertex collision (a
+vertex collided with an edge), or if it an edge collision (an edge collided with another edge). This is
+done using the Sutherland-Hodgman clipping algorithm. This algorithm first finds the incident face
+of the incident polygon, then clips the points on the face to the faces of the reference polygon.
+If there are any points left after clipping, then the point is kept with the original incident vertex
+and an edge collision is defined. This creates a collision manifold, called =CollisionDetails= object
+in the engine.
+
+*** Impulse Resolution
+
+Finally, based on the collision details given, the engine resolves the collision. In this process,
+3 major physical phenomenon are dealt with, using impulses to simulate collision.
++ Velocity - the velocity of the physical objects is modified by impulse to simulate their velocity
+  after collision.
++ Friction - Objects have a dynamic and static friction as surface properties. Static friction is
+  based on Coulomb's law of friction, and dynamic friction dictates how to dampen the velocity based
+  on the tangent to the surface's normal.
++ Rotational velocity and torque - Each physical object has an inertia component. This dictates how
+  a component rotates based on where on an object a force was applied.
+
+An impulse factor can be calculated, which can be then applied to both rotational velocity and
+velocity at once. The formulas for it are based on [[https://www.chrishecker.com/Rigid_Body_Dynamics][Chris Hecker's lessons on rigid body physics]].
+The impulse factor \(j\) is computable as such:
+
+\[j = -(1 + \text{bounce}) \times \frac{(\vec{v_{r}} \cdot  \vec{n})}{\frac{1}{m_{A}} + \frac{1}{m_{B}} + \frac{(r_{A} \times \vec{n})^{2}}{I_{A}} + \frac{(r_{B} \times \vec{n})^{2}}{I_{B}}}\]
+
+Where:
++ \(\text{bounce}\) is the coefficient of how much each objects should bounce,
++ \(\vec{v_{r}}\) is the vector of the relative velocity between objects A and B,
++ \(\vec{n}\) is the collision normal - it is calculated during collision checking as the normal
+  of the reference face.
++ \(m_{A}\) and \(m_{B}\) are the masses of objects A and B.
++ \(r_{A}\) and \(r_{B}\) are the distances between the point the collision is made, and
+  the center of mass of objects A and B.
++ \(\vec{a} \times \vec{b}\) represents the cross-product between 2 vectors - in the case of 2D vectors as
+  we have here, it is the resulting z-value of it. This can also be represented in 2D-space as
+  \(\vec{a}^{\perp} \cdot \vec{b}\), where \(\vec{a}^{\perp}\) is the left tangent to \(a\).
++ \(I_{A}\) and \(I_{B}\) are the moments of inertia of objects A and B. These can be calculated
+  based on the polygon and mass, or given by the user.
+
+If one of the objects involved in the collision is immovable, thanks to the setup of the =PhysicalObject=
+interface, the =getInverseInertia= and =getInverseMass= getters return 0, such that all the force is being
+returned to the movable object.
+
+Finally, impulse is applied as such to a rigid body:
+
+\[\vec{v} = \frac{1}{m} \times j \times \vec{n}\]
+\[v_{\theta} = \frac{(r \times \vec{n})^{2}}{I} \times j\]
+
+Where:
++ \(\vec{v}\) is the velocity of the object,
++ \(v_{\theta}\) is the rotational velocity of the object - how many radians it'll rotate by per second.
++ \(m\) and \(I\) the object's mass and moment of inertia.
+
+Overall, 2D rigid body physics produce a complex and real-looking effect to the world, despite some
+minor issues, often due to floating point precision error. Given more time, I would have tried
+dealing with those, but the result still looks good.
+
+*** Event-based logic
+To facilitate game logic, the engine and all the game objects allow to attach some event listeners
+for particular events into them. Event listeners are called for example upon object collision,
+or on each update.
+
+This kind of event-based logic allows to more easily deal with each object's behaviour, by simply
+linking an event listener to the engine or an object, and then simply leave the engine to call the
+event listener at the time needed.
+
+Event listeners are used all throughout the game. game updates and bullet to environment onHit
+interactions are dealt this way. UI buttons in the main menu use it as well for on click events,
+showing that the event listener system significantly simplifies game logic implementation.
+
+*** Game Menu and Game States
+The main class for the game is the =Runner= class. It is the class that decides what to display
+based on what state the runner is on. Here, button interactions act as state transitions. This
+simple state transition system allows with simple logic to model a menu tree that is easily extandable.
+
+*** Tank controllers
+Tank are controlled by objects which implement the =TankController= interface. This interface
+allows to call certain behaviour upon certain events, such as onClick events, game updates, or key press
+events. This also means that whether the player or a computer is playing the tank is decided by which
+tank controller is used at a given moment.
+
+*** =ComputerController= and TAS
+Finally, the =ComputerController= object is an implementation of the =TankController= that allows the
+computer to control a tank. It essentially ignores input and does all its logic on updates.
+
+The computer is based on a decision tree on what tank input to do based on its velocity, rotational
+velocity, and x-distance from the floor, allowing the tank to recover from getting pushed off the
+map, setttle itself, and position itself for a shot.
+
+Then, the tank uses the following Target Aquisition System to take a shot: Get a random value for aim angle and intensity. Using a Hill Climbing algorithm, search for the neighbours with the closest distance to the enemy tank. Repeat with lower increment step as approaching 0 and stop once a close enough shot is found.
+
+Such algorithm requires simulating a shot, which the engine supports by doing a local simulation of
+a game object and a rigid body. To do so, the engine works in 3 steps:
++ Add the game object to the world,
++ Until the game object is removed from the world, or a timeout occurs, call engine updates except:
+  - Only the given object's rigid body position changes and only it's collision pairs are loaded in the
+    queue,
+  - Only event listeners from that object are called.
++ Collect all the objects the given object has interacted with. The object will keep the position,
+  velocity, and rotational velocity parameters it had at the time it was removed from the world as well,
+  which the engine will use to calculate a distance to the tank.
+
+This method of simulating mainly avoids the expensive task of keeping track of an instance of the
+engine and all its game objects at a given moment, which makes it way cheaper to compute.
