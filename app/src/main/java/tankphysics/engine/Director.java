@@ -335,12 +335,9 @@ public class Director {
 
 		// Update loop
 		while (!pause && deltaT > targetSecondsPerFrame) {
-			System.out.println("Entering update loop!");
 			for (EngineEventListener l : listeners.get("update")) {
-				System.out.println(l);
 				l.call(null);
 			}
-			System.out.println("Exiting update loop");
 			update();
 			deltaT -= targetSecondsPerFrame;
 		}
@@ -515,7 +512,6 @@ public class Director {
 			return false;
 		}
 		addListenersBuffer.add(new EventTuple(id, listener));
-		System.out.println("Event added to " + id + ": " + listener);
 		return true;
 	}
 
