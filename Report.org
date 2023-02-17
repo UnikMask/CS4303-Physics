@@ -46,8 +46,10 @@ fun, and the game tries to translate that fun to the screen. Second, they serve 
 the tanks' vision, and as objects which the tanks have to destroy in order to get a better line of sight
 to the enemy tank.
 
-Credits to _Polygonix Games[fn:: https://opengameart.org/content/pixel-wooden-crate]_ for making the box
+Credits to _Polygonix Games[fn:1]_ for making the box
 pixel art asset. The asset is in the Public Domain.
+
+[fn:1] https://opengameart.org/content/pixel-wooden-crate
 
 ** Tanks
 The tanks in this game do not look or act like usual tanks do. They are small, light, fast, and can
@@ -76,12 +78,22 @@ fight off and one looses if they fall off the map or are flinged far enough from
 such a system is how it introduces into the game the requirement for the player to recover from a hit by
 trying to stay on the map, or try to come back, in turn leading to a faster-paced and more fighting-game like feeling.
 
-** Winning the Game
-A game is won for the first tank that can get the other tank off the map twice. The game therefore acts
-in a best-of 3 mechanic, which is a classic scheme for most fighting games. Considering the game is
-supposed to be pretty dynamic and fast-paced, like a fighting game, it makes sense that a best-of 3
-mechanic fits the gameplay here.
+** The Shell
+The shell in this game is a small white ball that acts as a rigid body in the game. Upon collision, it
+explodes and releases an impulse towards the object it collided upon. Collision detection for the shell
+happens as with every other rigid body in the game, thanks to the 2D physics engine in the backend.
 
+The size of the shell is of about 50cm x 50cm, to make it easier to hit the other enemy. Smaller shell
+sizes are hard to hit with and hurt the gameplay.
+** Rounds
+Each player takes their turn trying to shoot at the other tank. As visual cue, the currently playing tank
+is highlighted by the small white arrow above it.
+
+** Game Menu and Help
+Upon starting the game, you are greeted by a main menu which offers the selection to play, or to seek
+the Help page, upon which the user can refer to learn the basics of the game. Help pages are very important
+in a game as it is often not intuitive to know how to play a game immediately - reading this page
+beforewards helps towards the enjoyment of the player afterwards, hence why it is included here.
 * Design
 The whole program is separated into 2 main parts: the engine, which acts as a backend to the game,
 and the game itself, which acts as a frontend, using the engine for all physics and visual logic.
@@ -261,6 +273,8 @@ Event listeners are used all throughout the game. game updates and bullet to env
 interactions are dealt this way. UI buttons in the main menu use it as well for on click events,
 showing that the event listener system significantly simplifies game logic implementation.
 
+
+** The Frontend
 *** Game Menu and Game States
 The main class for the game is the =Runner= class. It is the class that decides what to display
 based on what state the runner is on. Here, button interactions act as state transitions. This
@@ -271,6 +285,25 @@ Tank are controlled by objects which implement the =TankController= interface. T
 allows to call certain behaviour upon certain events, such as onClick events, game updates, or key press
 events. This also means that whether the player or a computer is playing the tank is decided by which
 tank controller is used at a given moment.
+
+*** Wind Simulation
+The wind simulation is made by getting the velocity of the object relative to that of the wind and damping
+that relative velocity to 0, meaning the object moves at the velocity of the wind. The effect is not a
+perfect simulation of the real wind effect, as it does not incorporate area, but it is applied to the bullet
+via an event listener and the engine takes care of applying the force to the rigid body. Therefore the wind simulation
+is in a compact implementation, and easy to modify.
+
+In game, the wind is shown by an arrow on the map that is in the world, indicating to the player the direction
+of the wind. Wind intensity here is constant (either left, right or neutral) so no need to look up the wind's
+intensity. This design decision simplifies gameplay as having varying wind intensity makes it that much harder
+for the player to land a shot.
+
+*** Player input and feedback
+To control the tank's selected strength and elevation, the direction of the nozzle and an intensity marker
+are shown above the tank. Moving the mouse modifies the nozzle angle and intensity allowing the player to take
+a shot. Some games may prefer to keep track of the previous settings before taking a shot, but here,
+because of the small arena size it is easier to land a shot and so keeping track of previous options
+would help the player too much.
 
 *** =ComputerController= and TAS
 Finally, the =ComputerController= object is an implementation of the =TankController= that allows the
@@ -295,3 +328,43 @@ a game object and a rigid body. To do so, the engine works in 3 steps:
 
 This method of simulating mainly avoids the expensive task of keeping track of an instance of the
 engine and all its game objects at a given moment, which makes it way cheaper to compute.
+
+In the end, the TAS system is very accurate, and in order to tone down the difficulty of the computer, random bounded
+error has been added to the intensity and angle to make it miss some shots and allow the player to win some of the times.
+* Conclusion
+Overall, I have managed to fulfill all requirements of the practical, along with some extra extensions. The tank game is in
+a playable state, and stands out from the rest for some of its more original features. Given more time, I would have added
+some powerups from the boxes, which would not be complicated considering the bullets' behaviour is dependent to that of the
+event listeners it has attached.
+Finally, the work I did on the 2D physics engine will very probably serve me later on to make a new game engine for the last
+CS4303 practical.
+
+
+* Pictures
+
+#+CAPTION: The main menu of the game
+[[./tankphysics_menu.png]]
+
+#+CAPTION: The help screen
+[[./help_menu.png]]
+
+#+CAPTION: The play style selection screen
+[[./game_style_menu.png]]
+
+#+CAPTION: The main game area
+[[./game_map.png]]
+
+#+CAPTION: An ongoing game with wind and boxes falling off
+[[./game_ongoing.png]]
+
+#+CAPTION: A paused game
+[[./game_paused.png]]
+
+#+CAPTION: Red tank reaction upon taking damage
+[[./game_damage_effect.png]]
+
+#+CAPTION: Red tank falling due to taking damage
+[[./game_falling.png]]
+
+#+CAPTION: The blue tank's victory screen
+[[./game_win.png]]
