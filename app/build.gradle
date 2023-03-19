@@ -31,7 +31,7 @@ application {
 }
 
 jar {
-	baseName = "tankPhysics"
+	archiveBaseName = "tankPhysics"
 	manifest {
 		attributes 'Main-Class': 'tankphysics.Runner'
 	}
